@@ -1,0 +1,29 @@
+{
+    "name": "Outlet FC",
+    "short_name": "Outlet",
+    "description": "Gestión oficial del Outlet FC - Pizarra, Tesorería y Compromiso.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0A0F1E",
+    "theme_color": "#00FF9D",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "icon-192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "sports",
+        "productivity"
+    ]
+}
