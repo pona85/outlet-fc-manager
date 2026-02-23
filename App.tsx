@@ -89,10 +89,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </div>
 
             <Sidebar />
-            <main className="flex-1 transition-all duration-300 relative overflow-y-auto lg:overflow-y-auto z-10 pb-24 lg:pb-8 pt-safe">
-                <div className="h-full w-full">
-                    {children}
-                </div>
+            {/* min-h-0 is critical on Android: without it, flex children ignore overflow and expand past the screen */}
+            <main className="flex-1 min-h-0 min-w-0 flex flex-col transition-all duration-300 relative z-10 pb-24 lg:pb-8 pt-safe overflow-y-auto">
+                {children}
             </main>
             <BottomNav />
         </div>

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 interface AuthContextType {
@@ -14,15 +14,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [session, setSession] = useState<any>(null);
     const [userRole, setUserRole] = useState<'admin' | 'dt' | 'player' | null>(null);
     const [loading, setLoading] = useState(true);
+    // Ref to avoid re-fetching role if we already have it (prevents flicker on token refresh)
+    const roleCache = useRef<Record<string, 'admin' | 'dt' | 'player'>>({});
 
-    const fetchRole = async (userId: string) => {
+    const fetchRole = async (userId: string): Promise<void> => {
+        // If we already have this user's role cached, use it immediately
+        if (roleCache.current[userId]) {
+            setUserRole(roleCache.current[userId]);
+            return;
+        }
         try {
             const { data } = await supabase
                 .from('profiles')
                 .select('role')
                 .eq('id', userId)
-                .single();
-            if (data) setUserRole(data.role as any);
+                .single() as { data: { role: string } | null, error: any };
+            if (data) {
+                const role = data.role as 'admin' | 'dt' | 'player';
+                roleCache.current[userId] = role;
+                setUserRole(role);
+            }
         } catch (err) {
             console.error('Error fetching role:', err);
         }
@@ -32,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let isMounted = true;
         let authSubscription: any = null;
 
-        // Reduced timeout to 3 seconds (session check should be fast)
         const timeout = setTimeout(() => {
             if (isMounted && loading) {
                 setLoading(false);
@@ -59,10 +69,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setLoading(false);
                 }
 
-                // Step 3: ONLY NOW set up the listener (after initial state is set)
+                // Step 3: Set up the listener AFTER initial state is resolved
                 const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
                     if (!isMounted) return;
 
+                    // TOKEN_REFRESHED: session is silently updated — don't touch userRole
+                    // This prevents "flicker" where route guards momentarily see null role
+                    if (event === 'TOKEN_REFRESHED') {
+                        setSession(newSession);
+                        return;
+                    }
+
+                    // SIGNED_IN: update session and role (uses cache if available — no network call needed)
+                    if (event === 'SIGNED_IN' && newSession?.user) {
+                        setSession(newSession);
+                        await fetchRole(newSession.user.id);
+                        return;
+                    }
+
+                    // SIGNED_OUT: clear everything including cache
+                    if (event === 'SIGNED_OUT') {
+                        roleCache.current = {};
+                        setSession(null);
+                        setUserRole(null);
+                        return;
+                    }
+
+                    // For any other event, update session and fetch role if needed
                     setSession(newSession);
                     if (newSession?.user) {
                         await fetchRole(newSession.user.id);

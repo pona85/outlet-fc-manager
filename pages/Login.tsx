@@ -57,8 +57,8 @@ const Login: React.FC = () => {
                 <div className="bg-secondary-light/50 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden p-10">
                     <div className="text-center mb-10">
                         {/* Logo Placeholder - If real logo exists, use <img src="/outlet.jpg" /> */}
-                        <div className="w-24 h-24 bg-primary rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-primary/20 rotate-3">
-                            <span className="font-display font-black text-secondary text-4xl">OFC</span>
+                        <div className="w-24 h-24 rounded-3xl mx-auto mb-6 overflow-hidden shadow-lg shadow-primary/20 rotate-3">
+                            <img src="/icon-512x512.png" alt="Outlet FC" className="w-full h-full object-cover" />
                         </div>
                         <h1 className="text-4xl font-display font-black text-white uppercase tracking-tighter mb-2">Ingresar al Club</h1>
                         <p className="text-gray-400 font-medium">Gestión de Jugadores Outlet FC</p>

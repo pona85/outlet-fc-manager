@@ -149,7 +149,8 @@ body {
 
 /* Pull to Refresh Utility */
 .pull-to-refresh-content {
-    overscroll-behavior-y: contain;
+    /* touch-action: pan-y lets Android browser know vertical swipes are scroll gestures */
+    touch-action: pan-y;
 }
 
 /* Safe Areas */
@@ -170,21 +171,30 @@ body {
 }
 
 /* Mobile-first overscroll behavior */
-html,
-body {
-    overscroll-behavior-y: none;
+/* NOTE: position:fixed on body breaks scroll in child containers on Android Chrome.
+   Use height:100% + overflow:hidden only on html, let body/root scroll naturally. */
+html {
     height: 100%;
     width: 100%;
     overflow: hidden;
-    position: fixed;
-    /* Prevents bounce scroll on iOS */
+    overscroll-behavior-y: none;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+    /* iOS rubber-band prevention without position:fixed which breaks Android */
+    -webkit-overflow-scrolling: touch;
 }
 
 #root {
     height: 100%;
     width: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Touch targets */

@@ -74,8 +74,8 @@ export const Sidebar: React.FC = () => {
         `}>
                 {/* Logo Section */}
                 <div className="h-20 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
-                    <div className="relative w-10 h-10 flex-shrink-0 bg-primary rounded-xl flex items-center justify-center font-display font-black text-secondary">
-                        OFC
+                    <div className="relative w-10 h-10 flex-shrink-0 rounded-xl overflow-hidden">
+                        <img src="/icon-512x512.png" alt="Outlet FC" className="w-full h-full object-cover" />
                     </div>
                     <span className="ml-3 font-display font-bold text-xl tracking-tight text-gray-800 dark:text-white uppercase font-black">Outlet FC</span>
                 </div>
