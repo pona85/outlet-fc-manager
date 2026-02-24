@@ -14,35 +14,35 @@ interface TacticalLineupManagerProps {
 // Fixed percentages for 8v8 formations
 const FORMATIONS: Record<string, { x: number; y: number }[]> = {
     '2-3-2': [
-        { x: 50, y: 90 }, // GK (Fijo)
-        { x: 30, y: 75 }, { x: 70, y: 75 }, // DF
-        { x: 20, y: 50 }, { x: 50, y: 55 }, { x: 80, y: 50 }, // MD
-        { x: 35, y: 25 }, { x: 65, y: 25 }  // DL
+        { x: 50, y: 88 }, // GK
+        { x: 30, y: 65 }, { x: 70, y: 65 }, // DF
+        { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 }, // MD
+        { x: 35, y: 20 }, { x: 65, y: 20 }  // DL
     ],
     '3-3-1': [
-        { x: 50, y: 90 }, // GK
-        { x: 20, y: 75 }, { x: 50, y: 80 }, { x: 80, y: 75 }, // DF
-        { x: 20, y: 50 }, { x: 50, y: 55 }, { x: 80, y: 50 }, // MD
-        { x: 50, y: 20 }  // DL
+        { x: 50, y: 88 }, // GK
+        { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 }, // DF
+        { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 }, // MD
+        { x: 50, y: 18 }  // DL
     ],
     '2-4-1': [
-        { x: 50, y: 90 }, // GK
-        { x: 35, y: 75 }, { x: 65, y: 75 }, // DF
-        { x: 15, y: 50 }, { x: 40, y: 50 }, { x: 60, y: 50 }, { x: 85, y: 50 }, // MD
-        { x: 50, y: 20 }  // DL
+        { x: 50, y: 88 }, // GK
+        { x: 35, y: 65 }, { x: 65, y: 65 }, // DF
+        { x: 15, y: 42 }, { x: 40, y: 42 }, { x: 60, y: 42 }, { x: 85, y: 42 }, // MD
+        { x: 50, y: 18 }  // DL
     ],
     '2-3-1-1': [
-        { x: 50, y: 90 }, // GK
-        { x: 30, y: 75 }, { x: 70, y: 75 }, // DEF
-        { x: 20, y: 55 }, { x: 50, y: 55 }, { x: 80, y: 55 }, // MID
-        { x: 50, y: 35 }, // CAM
-        { x: 50, y: 15 }  // ST
+        { x: 50, y: 88 }, // GK
+        { x: 30, y: 65 }, { x: 70, y: 65 }, // DEF
+        { x: 20, y: 45 }, { x: 50, y: 45 }, { x: 80, y: 45 }, // MID
+        { x: 50, y: 28 }, // CAM
+        { x: 50, y: 12 }  // ST
     ],
     '3-2-2': [
-        { x: 50, y: 90 }, // GK
-        { x: 20, y: 75 }, { x: 50, y: 80 }, { x: 80, y: 75 }, // DEF
-        { x: 35, y: 50 }, { x: 65, y: 50 }, // MID
-        { x: 35, y: 20 }, { x: 65, y: 20 }  // FWD
+        { x: 50, y: 88 }, // GK
+        { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 }, // DEF
+        { x: 35, y: 42 }, { x: 65, y: 42 }, // MID
+        { x: 35, y: 18 }, { x: 65, y: 18 }  // FWD
     ]
 };
 
@@ -289,8 +289,8 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
     const getPlayerInSlot = (slotIndex: number) => {
         const coords = FORMATIONS[formation][slotIndex];
         return lineup.find(l =>
-            Math.abs(l.position_x - coords.x) < 1 &&
-            Math.abs(l.position_y - coords.y) < 1
+            Math.abs(l.position_x - coords.x) < 5 &&
+            Math.abs(l.position_y - coords.y) < 5
         );
     };
 
@@ -359,7 +359,13 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                                 `}
                                 >
                                     {assignedEntry ? (
-                                        <div className="flex flex-col items-center group">
+                                        <div className={`flex flex-col items-center group ${coords.y > 70 ? 'flex-col-reverse' : ''}`}>
+                                            {/* Name label (shown above if in lower field) */}
+                                            {coords.y > 70 && (
+                                                <span className="mb-2 text-[10px] sm:text-xs font-black text-white bg-secondary/80 px-3 py-1 rounded-lg backdrop-blur-md whitespace-nowrap max-w-[100px] truncate shadow-lg border border-white/10 uppercase tracking-tighter">
+                                                    {assignedEntry.profile?.full_name?.split(' ')[0]}
+                                                </span>
+                                            )}
                                             <div className="relative">
                                                 {/* Avatar Circle */}
                                                 <div className={`
@@ -395,9 +401,12 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                                                     </button>
                                                 )}
                                             </div>
-                                            <span className="mt-2 text-[10px] sm:text-xs font-black text-white bg-secondary/80 px-3 py-1 rounded-lg backdrop-blur-md whitespace-nowrap max-w-[100px] truncate shadow-lg border border-white/10 uppercase tracking-tighter">
-                                                {assignedEntry.profile?.full_name?.split(' ')[0]}
-                                            </span>
+                                            {/* Name label (shown below if in upper field) */}
+                                            {coords.y <= 70 && (
+                                                <span className="mt-2 text-[10px] sm:text-xs font-black text-white bg-secondary/80 px-3 py-1 rounded-lg backdrop-blur-md whitespace-nowrap max-w-[100px] truncate shadow-lg border border-white/10 uppercase tracking-tighter">
+                                                    {assignedEntry.profile?.full_name?.split(' ')[0]}
+                                                </span>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className={`
