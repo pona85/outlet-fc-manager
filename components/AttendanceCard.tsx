@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Clock, MapPin, Calendar, Check, X } from 'lucide-react';
+import { Shield, Clock, MapPin, Calendar, Check, X, Beer } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
 import { useAuth } from '../lib/AuthContext';
@@ -10,6 +10,7 @@ export const AttendanceCard = () => {
     const { session } = useAuth();
     const [match, setMatch] = useState<Match | null>(null);
     const [status, setStatus] = useState<'pending' | 'confirmed' | 'declined'>('pending');
+    const [staysForSocial, setStaysForSocial] = useState(false);
     const [loading, setLoading] = useState(true);
     const [playerCount, setPlayerCount] = useState(0);
 
@@ -40,13 +41,14 @@ export const AttendanceCard = () => {
                 // 3. Check my attendance status
                 const { data: attendance } = await supabase
                     .from('attendance')
-                    .select('confirmation_status')
+                    .select('*')
                     .eq('match_id', matchData.id)
                     .eq('player_id', currentUserId)
                     .maybeSingle();
 
                 if (attendance) {
-                    setStatus(attendance.confirmation_status as any);
+                    setStatus((attendance as any).confirmation_status as any);
+                    setStaysForSocial((attendance as any).stays_for_social || false);
                 }
             }
 
@@ -70,20 +72,43 @@ export const AttendanceCard = () => {
         if (newStatus === 'confirmed') setPlayerCount(prev => prev + 1);
         else if (status === 'confirmed') setPlayerCount(prev => prev - 1);
 
+        // If declining, reset social
+        if (newStatus === 'declined') setStaysForSocial(false);
+
         const { error } = await supabase
             .from('attendance')
             .upsert({
                 match_id: match.id,
                 player_id: currentUserId,
                 confirmation_status: newStatus,
-                // attendance_type might be needed but is nullable
+                stays_for_social: newStatus === 'declined' ? false : staysForSocial,
             }, { onConflict: 'match_id, player_id' });
 
         if (error) {
             console.error('Error updating attendance:', error);
-            // Revert on error would be ideal
         } else {
             fetchNextMatch(); // Refresh to be sure
+        }
+    };
+
+    const handleToggleSocial = async () => {
+        if (!match || !currentUserId || status !== 'confirmed') return;
+
+        const newVal = !staysForSocial;
+        setStaysForSocial(newVal);
+
+        const { error } = await supabase
+            .from('attendance')
+            .upsert({
+                match_id: match.id,
+                player_id: currentUserId,
+                confirmation_status: 'confirmed',
+                stays_for_social: newVal,
+            }, { onConflict: 'match_id, player_id' });
+
+        if (error) {
+            console.error('Error updating stays_for_social:', error);
+            setStaysForSocial(!newVal); // revert
         }
     };
 
@@ -187,6 +212,25 @@ export const AttendanceCard = () => {
                             </button>
                         </div>
                     </div>
+
+                    {/* Tercer Tiempo Toggle */}
+                    {status === 'confirmed' && (
+                        <div className="mt-5 animate-fade-in">
+                            <button
+                                onClick={handleToggleSocial}
+                                className={`w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl border-2 font-bold text-sm uppercase tracking-wider transition-all duration-300
+                                    ${staysForSocial
+                                        ? 'bg-[#98ffc8]/15 border-[#3DFFA2] text-[#3DFFA2] shadow-lg shadow-[#3DFFA2]/10'
+                                        : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 text-gray-400 hover:border-[#3DFFA2]/40 hover:text-[#3DFFA2]/60'
+                                    }
+                                `}
+                            >
+                                <span className="text-xl">{staysForSocial ? '🍻' : '🍺'}</span>
+                                <span>¿Te quedás al 3er Tiempo?</span>
+                                {staysForSocial && <span className="text-lg">✅</span>}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
             </div>

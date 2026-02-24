@@ -114,7 +114,8 @@ export const AdminAttendanceList = ({ matchId }: { matchId: string }) => {
     const stats = {
         confirmed: players.filter(p => p.attendance?.confirmation_status === 'confirmed').length,
         pending: players.filter(p => !p.attendance?.confirmation_status || p.attendance?.confirmation_status === 'pending').length,
-        declined: players.filter(p => p.attendance?.confirmation_status === 'declined').length
+        declined: players.filter(p => p.attendance?.confirmation_status === 'declined').length,
+        socialCount: players.filter(p => p.attendance?.confirmation_status === 'confirmed' && p.attendance?.stays_for_social).length
     };
 
     const handleSaveRealAttendance = async () => {
@@ -293,17 +294,27 @@ export const AdminAttendanceList = ({ matchId }: { matchId: string }) => {
                 <div className="flex justify-between items-center mb-4">
                     <div>
                         <h2 className="font-display text-xl font-black text-secondary dark:text-white uppercase tracking-tight">Plantel</h2>
-                        <div className="flex gap-2 text-[9px] font-black uppercase tracking-widest mt-1">
+                        <div className="flex gap-2 text-[9px] font-black uppercase tracking-widest mt-1 flex-wrap">
                             <span className="text-green-500">{stats.confirmed} Confirmados</span>
                             <span className="text-yellow-500/80">{stats.pending} Pendientes</span>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setIsRealAttendanceMode(true)}
-                        className="bg-primary hover:bg-primary-dark text-secondary px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg active:scale-95"
-                    >
-                        <Clock size={14} /> Registrar Asistencia Real
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {stats.socialCount > 0 && (
+                            <div className="flex items-center gap-2 bg-[#3DFFA2]/10 text-[#3DFFA2] px-3 py-2 rounded-xl border border-[#3DFFA2]/20 animate-fade-in">
+                                <span className="text-base">🍺</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">
+                                    3er Tiempo: {stats.socialCount}
+                                </span>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setIsRealAttendanceMode(true)}
+                            className="bg-primary hover:bg-primary-dark text-secondary px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg active:scale-95"
+                        >
+                            <Clock size={14} /> Registrar Asistencia Real
+                        </button>
+                    </div>
                 </div>
 
                 {/* Filters */}
@@ -342,7 +353,12 @@ export const AdminAttendanceList = ({ matchId }: { matchId: string }) => {
                                             )}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-gray-900 dark:text-white">{player.full_name}</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                                {player.full_name}
+                                                {player.attendance?.confirmation_status === 'confirmed' && player.attendance?.stays_for_social && (
+                                                    <span title="Se queda al 3er Tiempo" className="text-base cursor-default">🍺</span>
+                                                )}
+                                            </p>
                                             <p className="text-xs text-gray-500">{player.role || 'Jugador'}</p>
                                         </div>
                                     </div>

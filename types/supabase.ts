@@ -19,6 +19,7 @@ export type Database = {
                     match_id: string
                     player_id: string
                     points_impact: number | null
+                    stays_for_social: boolean | null
                     washed_jerseys: boolean | null
                 }
                 Insert: {
@@ -30,6 +31,7 @@ export type Database = {
                     match_id: string
                     player_id: string
                     points_impact?: number | null
+                    stays_for_social?: boolean | null
                     washed_jerseys?: boolean | null
                 }
                 Update: {
@@ -41,6 +43,7 @@ export type Database = {
                     match_id?: string
                     player_id?: string
                     points_impact?: number | null
+                    stays_for_social?: boolean | null
                     washed_jerseys?: boolean | null
                 }
                 Relationships: [

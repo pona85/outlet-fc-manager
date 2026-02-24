@@ -23,6 +23,7 @@ import {
     Users
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MatchRoster } from '../components/MatchRoster';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Match = Database['public']['Tables']['matches']['Row'];
@@ -43,6 +44,7 @@ const PlayerDashboard: React.FC = () => {
     const [nextMatch, setNextMatch] = useState<Match | null>(null);
     const [attendance, setAttendance] = useState<Attendance | null>(null);
     const [attendanceCount, setAttendanceCount] = useState(0);
+    const [staysForSocial, setStaysForSocial] = useState(false);
     const [savings, setSavings] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [balance, setBalance] = useState({ state: 'loading', expected: 0, paid: 0 });
@@ -100,6 +102,7 @@ const PlayerDashboard: React.FC = () => {
 
                         setAttendance(attRes.data as any);
                         setAttendanceCount(attCountRes.count || 0);
+                        setStaysForSocial((attRes.data as any)?.stays_for_social || false);
                         if (lineupRes.data) {
                             setLineupPos({ x: (lineupRes.data as any).position_x, y: (lineupRes.data as any).position_y });
                         }
@@ -153,11 +156,16 @@ const PlayerDashboard: React.FC = () => {
     const handleAttendance = async (status: 'confirmed' | 'declined') => {
         if (!nextMatch || !profile) return;
         setIsUpdating(true);
+
+        // If declining, reset social
+        if (status === 'declined') setStaysForSocial(false);
+
         try {
             const upsertData: any = {
                 match_id: nextMatch.id,
                 player_id: profile.id,
                 confirmation_status: status,
+                stays_for_social: status === 'declined' ? false : staysForSocial,
             };
             if (attendance?.id) upsertData.id = attendance.id;
 
@@ -180,6 +188,35 @@ const PlayerDashboard: React.FC = () => {
             setAttendanceCount(count || 0);
         } catch (error: any) {
             alert(`Error: ${error.message}`);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleToggleSocial = async () => {
+        if (!nextMatch || !profile || attendance?.confirmation_status !== 'confirmed') return;
+        setIsUpdating(true);
+
+        const newVal = !staysForSocial;
+        setStaysForSocial(newVal);
+
+        try {
+            const { data, error } = await supabase
+                .from('attendance')
+                .upsert({
+                    match_id: nextMatch.id,
+                    player_id: profile.id,
+                    confirmation_status: 'confirmed',
+                    stays_for_social: newVal,
+                }, { onConflict: 'match_id,player_id' })
+                .select()
+                .single();
+
+            if (error) throw error;
+            setAttendance(data);
+        } catch (error: any) {
+            setStaysForSocial(!newVal); // revert
+            console.error('Error updating stays_for_social:', error);
         } finally {
             setIsUpdating(false);
         }
@@ -316,6 +353,26 @@ const PlayerDashboard: React.FC = () => {
                                         No puedo ir {attendance?.confirmation_status === 'declined' && '❌'}
                                     </button>
                                 </div>
+
+                                {/* Tercer Tiempo Toggle */}
+                                {attendance?.confirmation_status === 'confirmed' && (
+                                    <div className="mt-6 animate-fade-in">
+                                        <button
+                                            onClick={handleToggleSocial}
+                                            disabled={isUpdating}
+                                            className={`w-full flex items-center justify-center gap-3 py-4 rounded-3xl border-2 font-black text-sm uppercase tracking-widest transition-all duration-300
+                                                ${staysForSocial
+                                                    ? 'bg-[#98ffc8]/15 border-[#3DFFA2] text-[#3DFFA2] shadow-lg shadow-[#3DFFA2]/20'
+                                                    : 'bg-white/5 border-white/10 text-white/40 hover:border-[#3DFFA2]/40 hover:text-[#3DFFA2]/60'
+                                                }
+                                            `}
+                                        >
+                                            <span className="text-xl">{staysForSocial ? '🍻' : '🍺'}</span>
+                                            <span>¿Te quedás al 3er Tiempo?</span>
+                                            {staysForSocial && <span className="text-lg">✅</span>}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -324,6 +381,11 @@ const PlayerDashboard: React.FC = () => {
                             <h3 className="text-2xl font-black text-gray-400 uppercase">No hay partidos programados</h3>
                             <p className="text-xs font-bold text-gray-500 mt-2 uppercase tracking-widest">El DT informará pronto la próxima fecha.</p>
                         </div>
+                    )}
+
+                    {/* Match Roster - Lista de Convocados */}
+                    {nextMatch && (
+                        <MatchRoster matchId={nextMatch.id} />
                     )}
 
                     {/* Jersey Custodian Widget */}
