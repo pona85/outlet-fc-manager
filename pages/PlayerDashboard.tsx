@@ -50,7 +50,7 @@ const PlayerDashboard: React.FC = () => {
     const [savings, setSavings] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [balance, setBalance] = useState({ state: 'loading', expected: 0, paid: 0 });
-    const [lineupPos, setLineupPos] = useState<{ x: number, y: number } | null>(null);
+    const [formationData, setFormationData] = useState<{ formation: string; lineup: any[]; subs: any[]; dt: any | null } | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [top3, setTop3] = useState<UnifiedRankingEntry[]>([]);
     const [hasShameAlert, setHasShameAlert] = useState(false);
@@ -98,18 +98,38 @@ const PlayerDashboard: React.FC = () => {
                     if (mData) {
                         setNextMatch(mData);
 
-                        const [attRes, attCountRes, lineupRes] = await Promise.all([
+                        const [attRes, attCountRes, allLineupRes, allConfirmedRes, dtRes] = await Promise.all([
                             supabase.from('attendance').select('*').eq('match_id', mData.id).eq('player_id', pData.id).maybeSingle(),
                             supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('match_id', mData.id).eq('confirmation_status', 'confirmed'),
-                            supabase.from('match_lineups').select('*').eq('match_id', mData.id).eq('player_id', pData.id).maybeSingle()
+                            supabase.from('match_lineups').select('*, profile:player_id(*)').eq('match_id', mData.id),
+                            supabase.from('attendance').select('player_id, profiles:player_id(*)').eq('match_id', mData.id).eq('confirmation_status', 'confirmed'),
+                            supabase.from('profiles').select('*').eq('role', 'dt').limit(1).maybeSingle()
                         ]) as any[];
 
                         setAttendance(attRes.data as any);
                         setAttendanceCount(attCountRes.count || 0);
                         setStaysForSocial((attRes.data as any)?.stays_for_social || false);
                         setAttendanceNote((attRes.data as any)?.note || '');
-                        if (lineupRes.data) {
-                            setLineupPos({ x: (lineupRes.data as any).position_x, y: (lineupRes.data as any).position_y });
+
+                        // Build formation data
+                        const lineupEntries = (allLineupRes.data || []) as any[];
+                        const confirmedEntries = (allConfirmedRes.data || []) as any[];
+                        const matchFormation = (mData as any).formation || '2-3-2';
+                        const lineupPlayerIds = new Set(lineupEntries.map((l: any) => l.player_id));
+                        const subs = confirmedEntries
+                            .filter((c: any) => !lineupPlayerIds.has(c.player_id))
+                            .map((c: any) => {
+                                const p = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+                                return p;
+                            }).filter(Boolean);
+
+                        if (lineupEntries.length > 0) {
+                            setFormationData({
+                                formation: matchFormation,
+                                lineup: lineupEntries,
+                                subs,
+                                dt: dtRes.data || null
+                            });
                         }
                     }
 
@@ -497,27 +517,147 @@ const PlayerDashboard: React.FC = () => {
                     {/* Jersey Custodian Widget */}
                     <JerseyComponent />
 
-                    {/* Tactics Snapshot */}
-                    {lineupPos && nextMatch && (
+                    {/* Formation Snapshot */}
+                    {formationData && nextMatch && (
                         <div className="bg-white dark:bg-card-dark rounded-[3rem] p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
-                            <div className="flex items-center gap-3 mb-8">
+                            <div className="flex items-center gap-3 mb-6">
                                 <div className="p-3 bg-primary/10 rounded-2xl text-primary">
                                     <Shield size={24} />
                                 </div>
-                                <h3 className="text-xl font-display font-black uppercase tracking-tight">Tu Posición</h3>
+                                <div>
+                                    <h3 className="text-xl font-display font-black uppercase tracking-tight">Formación</h3>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{formationData.formation}</p>
+                                </div>
                             </div>
-                            <div className="relative w-full aspect-[16/9] bg-[#2a9d8f] rounded-[2rem] border-4 border-secondary/20 overflow-hidden">
-                                <div className="absolute inset-4 border border-white/20 rounded-xl"></div>
-                                <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20 -translate-y-1/2"></div>
-                                <div className="absolute top-1/2 left-1/2 w-24 h-24 border border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                                <div
-                                    style={{ left: `${lineupPos.x}%`, top: `${lineupPos.y}%` }}
-                                    className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center animate-bounce-slow"
-                                >
-                                    <div className="w-14 h-14 bg-white rounded-full border-4 border-primary flex items-center justify-center shadow-2xl">
-                                        <span className="font-black text-secondary text-base">#{profile.jersey_number}</span>
+                            <div className="flex gap-4">
+                                {/* Mini Pitch */}
+                                <div className="relative flex-1 aspect-[3/4] bg-[#2a9d8f] rounded-2xl border-4 border-secondary/20 overflow-hidden min-h-[220px]">
+                                    <div className="absolute inset-3 border border-white/15 rounded-lg pointer-events-none"></div>
+                                    <div className="absolute top-1/2 left-0 right-0 h-px bg-white/15 -translate-y-1/2 pointer-events-none"></div>
+                                    <div className="absolute top-1/2 left-1/2 w-16 h-16 border border-white/15 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+
+                                    {(() => {
+                                        const MINI_FORMATIONS: Record<string, { x: number; y: number }[]> = {
+                                            '2-3-2': [
+                                                { x: 50, y: 88 }, { x: 30, y: 65 }, { x: 70, y: 65 },
+                                                { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 },
+                                                { x: 35, y: 20 }, { x: 65, y: 20 }
+                                            ],
+                                            '3-3-1': [
+                                                { x: 50, y: 88 }, { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 },
+                                                { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 },
+                                                { x: 50, y: 18 }
+                                            ],
+                                            '2-4-1': [
+                                                { x: 50, y: 88 }, { x: 35, y: 65 }, { x: 65, y: 65 },
+                                                { x: 15, y: 42 }, { x: 40, y: 42 }, { x: 60, y: 42 }, { x: 85, y: 42 },
+                                                { x: 50, y: 18 }
+                                            ],
+                                            '2-3-1-1': [
+                                                { x: 50, y: 88 }, { x: 30, y: 65 }, { x: 70, y: 65 },
+                                                { x: 20, y: 45 }, { x: 50, y: 45 }, { x: 80, y: 45 },
+                                                { x: 50, y: 28 }, { x: 50, y: 12 }
+                                            ],
+                                            '3-2-2': [
+                                                { x: 50, y: 88 }, { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 },
+                                                { x: 35, y: 42 }, { x: 65, y: 42 },
+                                                { x: 35, y: 18 }, { x: 65, y: 18 }
+                                            ]
+                                        };
+                                        const slots = MINI_FORMATIONS[formationData.formation] || MINI_FORMATIONS['2-3-2'];
+
+                                        return slots.map((coord, i) => {
+                                            const entry = formationData.lineup.find((l: any) => l.slot_index === i);
+                                            const entryProfile = entry?.profile ? (Array.isArray(entry.profile) ? entry.profile[0] : entry.profile) : null;
+                                            const isMe = entry?.player_id === profile.id;
+
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    style={{ left: `${coord.x}%`, top: `${coord.y}%` }}
+                                                    className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10`}
+                                                >
+                                                    <div className={`
+                                                        w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center overflow-hidden shadow-md transition-all
+                                                        ${isMe
+                                                            ? 'border-[3px] border-primary bg-white ring-2 ring-primary/40 scale-110'
+                                                            : entry
+                                                                ? 'border-2 border-white/60 bg-white/90'
+                                                                : 'border border-dashed border-white/30 bg-white/10'
+                                                        }
+                                                    `}>
+                                                        {entryProfile?.avatar_url ? (
+                                                            <img src={entryProfile.avatar_url} className="w-full h-full object-cover" alt="" />
+                                                        ) : entry ? (
+                                                            <span className={`text-[9px] font-black ${isMe ? 'text-primary' : 'text-secondary'}`}>
+                                                                {entryProfile?.full_name?.substring(0, 2).toUpperCase() || '??'}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+                                                    {isMe && (
+                                                        <span className="mt-1 text-[7px] font-black bg-primary text-secondary px-2 py-0.5 rounded-full uppercase whitespace-nowrap shadow-md">
+                                                            Vos
+                                                        </span>
+                                                    )}
+                                                    {!isMe && entryProfile && (
+                                                        <span className="mt-0.5 text-[6px] font-bold text-white/70 whitespace-nowrap truncate max-w-[50px]">
+                                                            {entryProfile.full_name?.split(' ')[0]}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
+
+                                {/* Subs + DT Panel */}
+                                <div className="w-28 sm:w-32 flex flex-col gap-3">
+                                    {/* DT */}
+                                    {formationData.dt && (
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2 border border-gray-100 dark:border-gray-700">
+                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center">DT</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                                    {formationData.dt.avatar_url ? (
+                                                        <img src={formationData.dt.avatar_url} className="w-full h-full object-cover" alt="" />
+                                                    ) : (
+                                                        <User size={12} className="text-gray-400" />
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">
+                                                    {formationData.dt.full_name?.split(' ')[0]}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Subs */}
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2 border border-gray-100 dark:border-gray-700 flex-1">
+                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center">Suplentes</p>
+                                        <div className="space-y-1.5">
+                                            {formationData.subs.length === 0 ? (
+                                                <p className="text-[9px] text-gray-400 text-center italic">—</p>
+                                            ) : (
+                                                formationData.subs.map((sub: any) => {
+                                                    const isMe = sub.id === profile.id;
+                                                    return (
+                                                        <div key={sub.id} className={`flex items-center gap-1.5 px-1 py-1 rounded-lg ${isMe ? 'bg-primary/10 border border-primary/20' : ''}`}>
+                                                            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                                                {sub.avatar_url ? (
+                                                                    <img src={sub.avatar_url} className="w-full h-full object-cover" alt="" />
+                                                                ) : (
+                                                                    <span className="text-[7px] font-bold text-gray-400">{sub.full_name?.substring(0, 2).toUpperCase()}</span>
+                                                                )}
+                                                            </div>
+                                                            <span className={`text-[9px] font-bold truncate ${isMe ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`}>
+                                                                {isMe ? 'Vos' : sub.full_name?.split(' ')[0]}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
                                     </div>
-                                    <span className="mt-2 text-[8px] font-black bg-secondary text-white px-3 py-1 rounded-full uppercase">Titular</span>
                                 </div>
                             </div>
                         </div>
