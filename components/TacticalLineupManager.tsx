@@ -432,7 +432,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
 
             {/* Columna Derecha: Plantel Confirmado (Only shown if editable) */}
             {isEditable && (
-                <div className="w-full lg:w-80 flex flex-col bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden lg:max-h-[calc(100vh-4rem)]">
+                <div className="w-full lg:w-80 flex flex-col bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden max-h-[50vh] lg:max-h-[calc(100vh-4rem)]">
                     <div className="p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
                         <div className="flex items-center gap-3">
                             <Users size={20} className="text-primary" />

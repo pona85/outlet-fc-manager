@@ -529,138 +529,141 @@ const PlayerDashboard: React.FC = () => {
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{formationData.formation}</p>
                                 </div>
                             </div>
-                            <div className="flex gap-4">
-                                {/* Mini Pitch */}
-                                <div className="relative flex-1 aspect-[4/5] bg-[#2a9d8f] rounded-2xl border-4 border-secondary/20 overflow-hidden">
-                                    <div className="absolute inset-3 border border-white/15 rounded-lg pointer-events-none"></div>
-                                    <div className="absolute top-1/2 left-0 right-0 h-px bg-white/15 -translate-y-1/2 pointer-events-none"></div>
-                                    <div className="absolute top-1/2 left-1/2 w-16 h-16 border border-white/15 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-                                    {/* Arco superior */}
-                                    <div className="absolute top-0 left-1/2 w-24 h-6 border-b-2 border-x-2 border-white/25 -translate-x-1/2 bg-white/5 pointer-events-none"></div>
-                                    {/* Arco inferior */}
-                                    <div className="absolute bottom-0 left-1/2 w-24 h-6 border-t-2 border-x-2 border-white/25 -translate-x-1/2 bg-white/5 pointer-events-none"></div>
+                            {/* Full-width Pitch */}
+                            <div className="relative w-full aspect-[3/4] bg-gradient-to-b from-[#1e8c7e] to-[#2a9d8f] rounded-2xl border-4 border-secondary/20 overflow-hidden">
+                                {/* Field lines */}
+                                <div className="absolute inset-4 border border-white/20 rounded-lg pointer-events-none"></div>
+                                <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20 -translate-y-1/2 pointer-events-none"></div>
+                                <div className="absolute top-1/2 left-1/2 w-20 h-20 border border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+                                {/* Arco superior */}
+                                <div className="absolute top-0 left-1/2 w-28 h-8 border-b-2 border-x-2 border-white/30 -translate-x-1/2 bg-white/5 pointer-events-none rounded-b-sm"></div>
+                                {/* Area chica superior */}
+                                <div className="absolute top-0 left-1/2 w-44 h-14 border-b border-x border-white/15 -translate-x-1/2 pointer-events-none"></div>
+                                {/* Arco inferior */}
+                                <div className="absolute bottom-0 left-1/2 w-28 h-8 border-t-2 border-x-2 border-white/30 -translate-x-1/2 bg-white/5 pointer-events-none rounded-t-sm"></div>
+                                {/* Area chica inferior */}
+                                <div className="absolute bottom-0 left-1/2 w-44 h-14 border-t border-x border-white/15 -translate-x-1/2 pointer-events-none"></div>
 
-                                    {(() => {
-                                        const MINI_FORMATIONS: Record<string, { x: number; y: number }[]> = {
-                                            '2-3-2': [
-                                                { x: 50, y: 88 }, { x: 30, y: 65 }, { x: 70, y: 65 },
-                                                { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 },
-                                                { x: 35, y: 20 }, { x: 65, y: 20 }
-                                            ],
-                                            '3-3-1': [
-                                                { x: 50, y: 88 }, { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 },
-                                                { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 },
-                                                { x: 50, y: 18 }
-                                            ],
-                                            '2-4-1': [
-                                                { x: 50, y: 88 }, { x: 35, y: 65 }, { x: 65, y: 65 },
-                                                { x: 15, y: 42 }, { x: 40, y: 42 }, { x: 60, y: 42 }, { x: 85, y: 42 },
-                                                { x: 50, y: 18 }
-                                            ],
-                                            '2-3-1-1': [
-                                                { x: 50, y: 88 }, { x: 30, y: 65 }, { x: 70, y: 65 },
-                                                { x: 20, y: 45 }, { x: 50, y: 45 }, { x: 80, y: 45 },
-                                                { x: 50, y: 28 }, { x: 50, y: 12 }
-                                            ],
-                                            '3-2-2': [
-                                                { x: 50, y: 88 }, { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 },
-                                                { x: 35, y: 42 }, { x: 65, y: 42 },
-                                                { x: 35, y: 18 }, { x: 65, y: 18 }
-                                            ]
-                                        };
-                                        const slots = MINI_FORMATIONS[formationData.formation] || MINI_FORMATIONS['2-3-2'];
+                                {(() => {
+                                    const MINI_FORMATIONS: Record<string, { x: number; y: number }[]> = {
+                                        '2-3-2': [
+                                            { x: 50, y: 88 }, { x: 30, y: 65 }, { x: 70, y: 65 },
+                                            { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 },
+                                            { x: 35, y: 20 }, { x: 65, y: 20 }
+                                        ],
+                                        '3-3-1': [
+                                            { x: 50, y: 88 }, { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 },
+                                            { x: 20, y: 42 }, { x: 50, y: 45 }, { x: 80, y: 42 },
+                                            { x: 50, y: 18 }
+                                        ],
+                                        '2-4-1': [
+                                            { x: 50, y: 88 }, { x: 35, y: 65 }, { x: 65, y: 65 },
+                                            { x: 15, y: 42 }, { x: 40, y: 42 }, { x: 60, y: 42 }, { x: 85, y: 42 },
+                                            { x: 50, y: 18 }
+                                        ],
+                                        '2-3-1-1': [
+                                            { x: 50, y: 88 }, { x: 30, y: 65 }, { x: 70, y: 65 },
+                                            { x: 20, y: 45 }, { x: 50, y: 45 }, { x: 80, y: 45 },
+                                            { x: 50, y: 28 }, { x: 50, y: 12 }
+                                        ],
+                                        '3-2-2': [
+                                            { x: 50, y: 88 }, { x: 20, y: 65 }, { x: 50, y: 68 }, { x: 80, y: 65 },
+                                            { x: 35, y: 42 }, { x: 65, y: 42 },
+                                            { x: 35, y: 18 }, { x: 65, y: 18 }
+                                        ]
+                                    };
+                                    const slots = MINI_FORMATIONS[formationData.formation] || MINI_FORMATIONS['2-3-2'];
 
-                                        return slots.map((coord, i) => {
-                                            const entry = formationData.lineup.find((l: any) => l.slot_index === i);
-                                            const entryProfile = entry?.profile ? (Array.isArray(entry.profile) ? entry.profile[0] : entry.profile) : null;
-                                            const isMe = entry?.player_id === profile.id;
+                                    return slots.map((coord, i) => {
+                                        const entry = formationData.lineup.find((l: any) => l.slot_index === i);
+                                        const entryProfile = entry?.profile ? (Array.isArray(entry.profile) ? entry.profile[0] : entry.profile) : null;
+                                        const isMe = entry?.player_id === profile.id;
 
-                                            return (
-                                                <div
-                                                    key={i}
-                                                    style={{ left: `${coord.x}%`, top: `${coord.y}%` }}
-                                                    className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10`}
-                                                >
-                                                    <div className={`
-                                                        w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center overflow-hidden shadow-lg transition-all
-                                                        ${isMe
-                                                            ? 'border-[3px] border-primary bg-white ring-2 ring-primary/40 scale-110'
-                                                            : entry
-                                                                ? 'border-2 border-white/60 bg-white/90'
-                                                                : 'border border-dashed border-white/30 bg-white/10'
-                                                        }
-                                                    `}>
-                                                        {entryProfile?.avatar_url ? (
-                                                            <img src={entryProfile.avatar_url} className="w-full h-full object-cover" alt="" />
-                                                        ) : entry ? (
-                                                            <span className={`text-[10px] font-black ${isMe ? 'text-primary' : 'text-secondary'}`}>
-                                                                {entryProfile?.full_name?.substring(0, 2).toUpperCase() || '??'}
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                    {isMe && (
-                                                        <span className="mt-1 text-[7px] font-black bg-primary text-secondary px-2 py-0.5 rounded-full uppercase whitespace-nowrap shadow-md">
-                                                            Vos
+                                        return (
+                                            <div
+                                                key={i}
+                                                style={{ left: `${coord.x}%`, top: `${coord.y}%` }}
+                                                className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10"
+                                            >
+                                                <div className={`
+                                                    w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center overflow-hidden shadow-xl transition-all
+                                                    ${isMe
+                                                        ? 'border-[3px] border-primary bg-white ring-4 ring-primary/30 scale-110'
+                                                        : entry
+                                                            ? 'border-2 border-white/70 bg-white'
+                                                            : 'border-2 border-dashed border-white/30 bg-white/10'
+                                                    }
+                                                `}>
+                                                    {entryProfile?.avatar_url ? (
+                                                        <img src={entryProfile.avatar_url} className="w-full h-full object-cover" alt="" />
+                                                    ) : entry ? (
+                                                        <span className={`text-xs font-black ${isMe ? 'text-primary' : 'text-secondary'}`}>
+                                                            {entryProfile?.full_name?.substring(0, 2).toUpperCase() || '??'}
                                                         </span>
-                                                    )}
-                                                    {!isMe && entryProfile && (
-                                                        <span className="mt-0.5 text-[7px] font-bold text-white/80 whitespace-nowrap truncate max-w-[55px]">
-                                                            {entryProfile.full_name?.split(' ')[0]}
-                                                        </span>
-                                                    )}
+                                                    ) : null}
                                                 </div>
-                                            );
-                                        });
-                                    })()}
-                                </div>
-
-                                {/* Subs + DT Panel */}
-                                <div className="w-28 sm:w-32 flex flex-col gap-3">
-                                    {/* DT */}
-                                    {formationData.dt && (
-                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2 border border-gray-100 dark:border-gray-700">
-                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center">DT</p>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center flex-shrink-0">
-                                                    {formationData.dt.avatar_url ? (
-                                                        <img src={formationData.dt.avatar_url} className="w-full h-full object-cover" alt="" />
-                                                    ) : (
-                                                        <User size={12} className="text-gray-400" />
-                                                    )}
-                                                </div>
-                                                <span className="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">
-                                                    {formationData.dt.full_name?.split(' ')[0]}
-                                                </span>
+                                                {isMe && (
+                                                    <span className="mt-1.5 text-[8px] font-black bg-primary text-secondary px-2.5 py-0.5 rounded-full uppercase whitespace-nowrap shadow-lg">
+                                                        Vos
+                                                    </span>
+                                                )}
+                                                {!isMe && entryProfile && (
+                                                    <span className="mt-1 text-[8px] font-bold text-white/90 whitespace-nowrap truncate max-w-[60px] bg-black/20 px-1.5 py-0.5 rounded-md">
+                                                        {entryProfile.full_name?.split(' ')[0]}
+                                                    </span>
+                                                )}
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    });
+                                })()}
+                            </div>
 
-                                    {/* Subs */}
-                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2 border border-gray-100 dark:border-gray-700 flex-1">
-                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center">Suplentes</p>
-                                        <div className="space-y-1.5">
-                                            {formationData.subs.length === 0 ? (
-                                                <p className="text-[9px] text-gray-400 text-center italic">—</p>
+                            {/* DT + Subs row below pitch */}
+                            <div className="flex gap-3 mt-4">
+                                {/* DT */}
+                                {formationData.dt && (
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center gap-3 shrink-0">
+                                        <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                            {formationData.dt.avatar_url ? (
+                                                <img src={formationData.dt.avatar_url} className="w-full h-full object-cover" alt="" />
                                             ) : (
-                                                formationData.subs.map((sub: any) => {
-                                                    const isMe = sub.id === profile.id;
-                                                    return (
-                                                        <div key={sub.id} className={`flex items-center gap-1.5 px-1 py-1 rounded-lg ${isMe ? 'bg-primary/10 border border-primary/20' : ''}`}>
-                                                            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center flex-shrink-0">
-                                                                {sub.avatar_url ? (
-                                                                    <img src={sub.avatar_url} className="w-full h-full object-cover" alt="" />
-                                                                ) : (
-                                                                    <span className="text-[7px] font-bold text-gray-400">{sub.full_name?.substring(0, 2).toUpperCase()}</span>
-                                                                )}
-                                                            </div>
-                                                            <span className={`text-[9px] font-bold truncate ${isMe ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`}>
-                                                                {isMe ? 'Vos' : sub.full_name?.split(' ')[0]}
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                })
+                                                <User size={16} className="text-gray-400" />
                                             )}
                                         </div>
+                                        <div>
+                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">DT</p>
+                                            <p className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                                {formationData.dt.full_name?.split(' ')[0]}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Subs */}
+                                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex-1 min-w-0">
+                                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2">Suplentes ({formationData.subs.length})</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {formationData.subs.length === 0 ? (
+                                            <p className="text-[10px] text-gray-400 italic">Sin suplentes</p>
+                                        ) : (
+                                            formationData.subs.map((sub: any) => {
+                                                const isMe = sub.id === profile.id;
+                                                return (
+                                                    <div key={sub.id} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${isMe ? 'bg-primary/10 border border-primary/20' : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700'}`}>
+                                                        <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center flex-shrink-0">
+                                                            {sub.avatar_url ? (
+                                                                <img src={sub.avatar_url} className="w-full h-full object-cover" alt="" />
+                                                            ) : (
+                                                                <span className="text-[8px] font-bold text-gray-400">{sub.full_name?.substring(0, 2).toUpperCase()}</span>
+                                                            )}
+                                                        </div>
+                                                        <span className={`text-[10px] font-bold truncate ${isMe ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`}>
+                                                            {isMe ? 'Vos' : sub.full_name?.split(' ')[0]}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
                                     </div>
                                 </div>
                             </div>

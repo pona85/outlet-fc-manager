@@ -69,7 +69,10 @@ const Tactics: React.FC = () => {
                     </span>
                 </h1>
             </div>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden -webkit-overflow-scrolling-touch">
+            <div
+                className="flex-1 overflow-y-auto overflow-x-hidden"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+            >
                 <TacticalLineupManager matchId={match.id} isEditable={isEditable} />
             </div>
         </div>
