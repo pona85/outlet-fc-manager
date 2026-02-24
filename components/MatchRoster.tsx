@@ -116,7 +116,7 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
 
                 {/* Tercer Tiempo Badge */}
                 {socialCount > 0 && (
-                    <div className="flex items-center gap-2 bg-[#3DFFA2]/10 text-[#3DFFA2] px-4 py-2.5 rounded-2xl border border-[#3DFFA2]/20 animate-fade-in shrink-0">
+                    <div className="flex items-center gap-2 bg-[#1B9E5E]/10 text-[#1B9E5E] dark:text-[#22B86A] px-4 py-2.5 rounded-2xl border border-[#1B9E5E]/20 animate-fade-in shrink-0">
                         <span className="text-lg">🍻</span>
                         <span className="text-[10px] font-black uppercase tracking-widest">
                             {socialCount} se {socialCount === 1 ? 'queda' : 'quedan'} al 3er tiempo
@@ -179,41 +179,7 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
                 </div>
             )}
 
-            {/* === Group 2: Se prenden al 3er Tiempo === */}
-            {socialCount > 0 && (
-                <div className="mb-8">
-                    <div className="flex items-center gap-2 mb-4">
-                        <span className="text-sm">🍺</span>
-                        <h4 className="text-[10px] font-black text-[#3DFFA2] uppercase tracking-[0.25em]">
-                            Se prenden al 3er Tiempo ({socialCount})
-                        </h4>
-                    </div>
-                    <div className="bg-[#3DFFA2]/5 border border-[#3DFFA2]/15 rounded-2xl p-4">
-                        <div className="flex flex-wrap gap-2">
-                            {confirmed.filter(p => p.stays_for_social).map(player => (
-                                <div
-                                    key={player.id}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#3DFFA2]/10 border border-[#3DFFA2]/20"
-                                >
-                                    <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden border border-[#3DFFA2]/30">
-                                        {player.avatar_url ? (
-                                            <img src={player.avatar_url} alt="" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <User size={14} className="text-gray-400" />
-                                        )}
-                                    </div>
-                                    <span className="text-[11px] font-bold text-[#3DFFA2]">
-                                        {player.nickname || player.full_name?.split(' ')[0] || 'Jugador'}
-                                    </span>
-                                    <span className="text-xs">🍻</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* === Group 3: Bajas (No asisten) === */}
+            {/* === Group 2: Bajas (No asisten) === */}
             {declined.length > 0 && (
                 <div className="mb-8">
                     <div className="flex items-center gap-2 mb-4">
@@ -246,7 +212,7 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
 
             {/* === Group 3: Sin Confirmar === */}
             {pending.length > 0 && (
-                <div>
+                <div className={socialCount > 0 ? 'mb-8' : ''}>
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                         <h4 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.25em]">
@@ -271,6 +237,40 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
                                 </span>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* === Group 4: Se prenden al 3er Tiempo === */}
+            {socialCount > 0 && (
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <span className="text-sm">🍺</span>
+                        <h4 className="text-[10px] font-black text-[#1B9E5E] dark:text-[#22B86A] uppercase tracking-[0.25em]">
+                            Se prenden al 3er Tiempo ({socialCount})
+                        </h4>
+                    </div>
+                    <div className="bg-[#1B9E5E]/5 dark:bg-[#1B9E5E]/10 border border-[#1B9E5E]/15 dark:border-[#1B9E5E]/20 rounded-2xl p-4">
+                        <div className="flex flex-wrap gap-2">
+                            {confirmed.filter(p => p.stays_for_social).map(player => (
+                                <div
+                                    key={player.id}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1B9E5E]/10 dark:bg-[#1B9E5E]/15 border border-[#1B9E5E]/20 dark:border-[#1B9E5E]/25"
+                                >
+                                    <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden border border-[#1B9E5E]/30">
+                                        {player.avatar_url ? (
+                                            <img src={player.avatar_url} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User size={14} className="text-gray-400" />
+                                        )}
+                                    </div>
+                                    <span className="text-[11px] font-bold text-[#1B9E5E] dark:text-[#22B86A]">
+                                        {player.nickname || player.full_name?.split(' ')[0] || 'Jugador'}
+                                    </span>
+                                    <span className="text-xs">🍻</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
