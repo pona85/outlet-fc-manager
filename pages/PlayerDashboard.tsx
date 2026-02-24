@@ -45,6 +45,7 @@ const PlayerDashboard: React.FC = () => {
     const [attendance, setAttendance] = useState<Attendance | null>(null);
     const [attendanceCount, setAttendanceCount] = useState(0);
     const [staysForSocial, setStaysForSocial] = useState(false);
+    const [attendanceNote, setAttendanceNote] = useState('');
     const [savings, setSavings] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [balance, setBalance] = useState({ state: 'loading', expected: 0, paid: 0 });
@@ -103,6 +104,7 @@ const PlayerDashboard: React.FC = () => {
                         setAttendance(attRes.data as any);
                         setAttendanceCount(attCountRes.count || 0);
                         setStaysForSocial((attRes.data as any)?.stays_for_social || false);
+                        setAttendanceNote((attRes.data as any)?.note || '');
                         if (lineupRes.data) {
                             setLineupPos({ x: (lineupRes.data as any).position_x, y: (lineupRes.data as any).position_y });
                         }
@@ -219,6 +221,19 @@ const PlayerDashboard: React.FC = () => {
             console.error('Error updating stays_for_social:', error);
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const saveNote = async (text: string) => {
+        if (!nextMatch || !profile || !attendance) return;
+        try {
+            await supabase
+                .from('attendance')
+                .update({ note: text || null } as any)
+                .eq('match_id', nextMatch.id)
+                .eq('player_id', profile.id);
+        } catch (error) {
+            console.error('Error saving note:', error);
         }
     };
 
@@ -371,6 +386,25 @@ const PlayerDashboard: React.FC = () => {
                                             <span>¿Te quedás al 3er Tiempo?</span>
                                             {staysForSocial && <span className="text-lg">✅</span>}
                                         </button>
+                                    </div>
+                                )}
+
+                                {/* Aclaración del jugador */}
+                                {attendance?.confirmation_status && (
+                                    <div className="mt-4 animate-fade-in">
+                                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2 block">
+                                            📝 Aclaración (opcional)
+                                        </label>
+                                        <textarea
+                                            value={attendanceNote}
+                                            onChange={(e) => setAttendanceNote(e.target.value)}
+                                            onBlur={(e) => saveNote(e.target.value)}
+                                            placeholder="Ej: llego arrancado el partido, me tengo que ir en el 2do tiempo..."
+                                            maxLength={150}
+                                            rows={2}
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all resize-none"
+                                        />
+                                        <p className="text-[9px] text-white/20 mt-1 text-right">{attendanceNote.length}/150</p>
                                     </div>
                                 )}
                             </div>

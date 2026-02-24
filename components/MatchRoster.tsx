@@ -10,6 +10,7 @@ type RosterPlayer = {
     jersey_number: number | null;
     confirmation_status: string | null;
     stays_for_social: boolean | null;
+    note: string | null;
 };
 
 interface MatchRosterProps {
@@ -62,6 +63,7 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
                     ...p,
                     confirmation_status: att?.confirmation_status || null,
                     stays_for_social: att?.stays_for_social || null,
+                    note: att?.note || null,
                 };
             });
             setPlayers(merged);
@@ -172,6 +174,11 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
                                     {player.jersey_number && (
                                         <p className="text-[9px] font-black text-primary/60 mt-0.5">#{player.jersey_number}</p>
                                     )}
+                                    {player.note && (
+                                        <p className="text-[8px] italic text-amber-500/80 dark:text-amber-400/70 mt-1 truncate" title={player.note}>
+                                            📝 {player.note}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -201,9 +208,16 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
                                         <User size={14} className="text-gray-400" />
                                     )}
                                 </div>
-                                <span className="text-[11px] font-bold text-red-400/80 dark:text-red-400/60">
-                                    {player.nickname || player.full_name?.split(' ')[0] || 'Jugador'}
-                                </span>
+                                <div className="min-w-0">
+                                    <span className="text-[11px] font-bold text-red-400/80 dark:text-red-400/60">
+                                        {player.nickname || player.full_name?.split(' ')[0] || 'Jugador'}
+                                    </span>
+                                    {player.note && (
+                                        <p className="text-[9px] italic text-red-300/60 dark:text-red-400/40 truncate max-w-[120px]" title={player.note}>
+                                            {player.note}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

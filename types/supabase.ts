@@ -17,6 +17,7 @@ export type Database = {
                     forgot_jerseys: boolean | null
                     id: string
                     match_id: string
+                    note: string | null
                     player_id: string
                     points_impact: number | null
                     stays_for_social: boolean | null
@@ -29,6 +30,7 @@ export type Database = {
                     forgot_jerseys?: boolean | null
                     id?: string
                     match_id: string
+                    note?: string | null
                     player_id: string
                     points_impact?: number | null
                     stays_for_social?: boolean | null
@@ -41,6 +43,7 @@ export type Database = {
                     forgot_jerseys?: boolean | null
                     id?: string
                     match_id?: string
+                    note?: string | null
                     player_id?: string
                     points_impact?: number | null
                     stays_for_social?: boolean | null

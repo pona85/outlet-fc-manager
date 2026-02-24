@@ -360,6 +360,11 @@ export const AdminAttendanceList = ({ matchId }: { matchId: string }) => {
                                                 )}
                                             </p>
                                             <p className="text-xs text-gray-500">{player.role || 'Jugador'}</p>
+                                            {player.attendance?.note && (
+                                                <p className="text-[10px] italic text-amber-500/80 dark:text-amber-400/70 mt-0.5">
+                                                    📝 {player.attendance.note}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
