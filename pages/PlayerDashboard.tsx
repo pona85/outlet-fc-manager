@@ -531,10 +531,14 @@ const PlayerDashboard: React.FC = () => {
                             </div>
                             <div className="flex gap-4">
                                 {/* Mini Pitch */}
-                                <div className="relative flex-1 aspect-[3/4] bg-[#2a9d8f] rounded-2xl border-4 border-secondary/20 overflow-hidden min-h-[220px]">
+                                <div className="relative flex-1 aspect-[4/5] bg-[#2a9d8f] rounded-2xl border-4 border-secondary/20 overflow-hidden">
                                     <div className="absolute inset-3 border border-white/15 rounded-lg pointer-events-none"></div>
                                     <div className="absolute top-1/2 left-0 right-0 h-px bg-white/15 -translate-y-1/2 pointer-events-none"></div>
                                     <div className="absolute top-1/2 left-1/2 w-16 h-16 border border-white/15 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+                                    {/* Arco superior */}
+                                    <div className="absolute top-0 left-1/2 w-24 h-6 border-b-2 border-x-2 border-white/25 -translate-x-1/2 bg-white/5 pointer-events-none"></div>
+                                    {/* Arco inferior */}
+                                    <div className="absolute bottom-0 left-1/2 w-24 h-6 border-t-2 border-x-2 border-white/25 -translate-x-1/2 bg-white/5 pointer-events-none"></div>
 
                                     {(() => {
                                         const MINI_FORMATIONS: Record<string, { x: number; y: number }[]> = {
@@ -578,7 +582,7 @@ const PlayerDashboard: React.FC = () => {
                                                     className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10`}
                                                 >
                                                     <div className={`
-                                                        w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center overflow-hidden shadow-md transition-all
+                                                        w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center overflow-hidden shadow-lg transition-all
                                                         ${isMe
                                                             ? 'border-[3px] border-primary bg-white ring-2 ring-primary/40 scale-110'
                                                             : entry
@@ -589,7 +593,7 @@ const PlayerDashboard: React.FC = () => {
                                                         {entryProfile?.avatar_url ? (
                                                             <img src={entryProfile.avatar_url} className="w-full h-full object-cover" alt="" />
                                                         ) : entry ? (
-                                                            <span className={`text-[9px] font-black ${isMe ? 'text-primary' : 'text-secondary'}`}>
+                                                            <span className={`text-[10px] font-black ${isMe ? 'text-primary' : 'text-secondary'}`}>
                                                                 {entryProfile?.full_name?.substring(0, 2).toUpperCase() || '??'}
                                                             </span>
                                                         ) : null}
@@ -600,7 +604,7 @@ const PlayerDashboard: React.FC = () => {
                                                         </span>
                                                     )}
                                                     {!isMe && entryProfile && (
-                                                        <span className="mt-0.5 text-[6px] font-bold text-white/70 whitespace-nowrap truncate max-w-[50px]">
+                                                        <span className="mt-0.5 text-[7px] font-bold text-white/80 whitespace-nowrap truncate max-w-[55px]">
                                                             {entryProfile.full_name?.split(' ')[0]}
                                                         </span>
                                                     )}
