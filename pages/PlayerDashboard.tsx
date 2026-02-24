@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/AuthContext';
 import { Database } from '../types/supabase';
@@ -20,7 +20,8 @@ import {
     LogOut,
     Shirt,
     Trophy,
-    Users
+    Users,
+    Camera
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MatchRoster } from '../components/MatchRoster';
@@ -53,6 +54,8 @@ const PlayerDashboard: React.FC = () => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [top3, setTop3] = useState<UnifiedRankingEntry[]>([]);
     const [hasShameAlert, setHasShameAlert] = useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -237,6 +240,58 @@ const PlayerDashboard: React.FC = () => {
         }
     };
 
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !profile) return;
+
+        // Validate file
+        if (!file.type.startsWith('image/')) {
+            alert('Solo se permiten imágenes');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('La imagen no puede superar los 5MB');
+            return;
+        }
+
+        setUploadingAvatar(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const filePath = `player_${profile.id}_${Date.now()}.${fileExt}`;
+
+            // Upload to storage
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            const avatarUrl = urlData.publicUrl;
+
+            // Update profile
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ avatar_url: avatarUrl } as any)
+                .eq('id', profile.id);
+
+            if (updateError) throw updateError;
+
+            setProfile({ ...profile, avatar_url: avatarUrl });
+        } catch (error: any) {
+            console.error('Error uploading avatar:', error);
+            alert('Error al subir la foto: ' + error.message);
+        } finally {
+            setUploadingAvatar(false);
+            // Reset file input
+            if (avatarInputRef.current) avatarInputRef.current.value = '';
+        }
+    };
+
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(val).replace('ARS', '$');
     };
@@ -254,11 +309,28 @@ const PlayerDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
                 <div className="flex items-center gap-6">
                     <div className="relative group">
-                        <div className="w-24 h-24 rounded-[2.5rem] overflow-hidden border-4 border-primary/20 bg-secondary flex items-center justify-center shadow-2xl group-hover:border-primary/50 transition-all">
-                            {profile.avatar_url ? (
+                        <div
+                            onClick={() => avatarInputRef.current?.click()}
+                            className="w-24 h-24 rounded-[2.5rem] overflow-hidden border-4 border-primary/20 bg-secondary flex items-center justify-center shadow-2xl group-hover:border-primary/50 transition-all cursor-pointer"
+                        >
+                            {uploadingAvatar ? (
+                                <Loader2 className="text-primary animate-spin" size={32} />
+                            ) : profile.avatar_url ? (
                                 <img src={profile.avatar_url} className="w-full h-full object-cover" alt="Profile" />
                             ) : <User className="text-gray-500" size={40} />}
+
+                            {/* Camera overlay */}
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity rounded-[2.5rem]">
+                                <Camera className="text-white" size={24} />
+                            </div>
                         </div>
+                        <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                        />
                         <div className="absolute -bottom-1 -right-1 bg-primary text-secondary text-sm font-black w-9 h-9 flex items-center justify-center rounded-2xl border-2 border-white dark:border-background-dark shadow-xl">
                             #{profile.jersey_number || '--'}
                         </div>
