@@ -212,24 +212,31 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
 
         if (!entryA || !entryB) return;
 
+        const slotA = (entryA as any).slot_index;
+        const slotB = (entryB as any).slot_index;
+        const coordsA = FORMATIONS[formation][slotA];
+        const coordsB = FORMATIONS[formation][slotB];
+
         const { error } = await supabase
             .from('match_lineups')
             .upsert([
                 {
                     match_id: matchId,
                     player_id: playerAId,
-                    position_x: entryB.position_x,
-                    position_y: entryB.position_y,
+                    slot_index: slotB,
+                    position_x: coordsB.x,
+                    position_y: coordsB.y,
                     is_starter: true
                 },
                 {
                     match_id: matchId,
                     player_id: playerBId,
-                    position_x: entryA.position_x,
-                    position_y: entryA.position_y,
+                    slot_index: slotA,
+                    position_x: coordsA.x,
+                    position_y: coordsA.y,
                     is_starter: true
                 }
-            ], { onConflict: 'match_id, player_id' });
+            ] as any, { onConflict: 'match_id, player_id' });
 
         if (error) {
             console.error("Error swapping players:", error);
@@ -248,10 +255,11 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
             .upsert({
                 match_id: matchId,
                 player_id: playerId,
+                slot_index: slotIndex,
                 position_x: coords.x,
                 position_y: coords.y,
                 is_starter: true
-            }, { onConflict: 'match_id, player_id' });
+            } as any, { onConflict: 'match_id, player_id' });
 
         if (error) {
             console.error("Error assigning player:", error);
@@ -285,13 +293,9 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
         setSelectedSlotIndex(null);
     };
 
-    // Helper to find player in a specific visual slot
+    // Helper to find player in a specific visual slot (by slot_index)
     const getPlayerInSlot = (slotIndex: number) => {
-        const coords = FORMATIONS[formation][slotIndex];
-        return lineup.find(l =>
-            Math.abs(l.position_x - coords.x) < 5 &&
-            Math.abs(l.position_y - coords.y) < 5
-        );
+        return lineup.find(l => (l as any).slot_index === slotIndex);
     };
 
     return (
