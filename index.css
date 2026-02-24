@@ -197,12 +197,19 @@ body {
     flex-direction: column;
 }
 
-/* Touch targets */
-button,
+/* Touch targets — exclude pitch slot buttons and small inline badges */
+button:not([data-pitch-slot]),
 a {
     min-height: 44px;
     min-width: 44px;
     touch-action: manipulation;
+}
+
+/* Tactical pitch: prevent page scroll while interacting with the field */
+[data-pitch-slot] {
+    touch-action: none;
+    min-height: unset;
+    min-width: unset;
 }
 
 /* Custom Pull to Refresh Indicator */

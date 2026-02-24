@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabaseClient';
 import { TacticalLineupManager } from '../components/TacticalLineupManager';
 import { Database } from '../types/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { PullToRefresh } from '../components/PullToRefresh';
 
 type Match = Database['public']['Tables']['matches']['Row'];
 
@@ -61,7 +60,7 @@ const Tactics: React.FC = () => {
     );
 
     return (
-        <div className="h-full flex flex-col bg-background-light dark:bg-background-dark overflow-hidden">
+        <div className="h-full flex flex-col bg-background-light dark:bg-background-dark">
             <div className="px-6 py-3 bg-white dark:bg-card-dark border-b border-gray-200 dark:border-gray-700 shrink-0 z-20">
                 <h1 className="text-xl font-bold dark:text-white flex items-center gap-2">
                     <span className="text-primary truncate">VS {match.opponent}</span>
@@ -70,10 +69,8 @@ const Tactics: React.FC = () => {
                     </span>
                 </h1>
             </div>
-            <div className="flex-1 overflow-hidden relative">
-                <PullToRefresh onRefresh={fetchMatch}>
-                    <TacticalLineupManager matchId={match.id} isEditable={isEditable} />
-                </PullToRefresh>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden -webkit-overflow-scrolling-touch">
+                <TacticalLineupManager matchId={match.id} isEditable={isEditable} />
             </div>
         </div>
     );

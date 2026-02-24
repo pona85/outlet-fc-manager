@@ -92,8 +92,28 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
 
     const fetchData = async () => {
         setLoading(true);
-        await Promise.all([fetchConfirmedPlayers(), fetchLineup()]);
+        await Promise.all([fetchConfirmedPlayers(), fetchLineup(), fetchFormation()]);
         setLoading(false);
+    };
+
+    const fetchFormation = async () => {
+        const { data } = await supabase
+            .from('matches')
+            .select('formation')
+            .eq('id', matchId)
+            .single();
+
+        if (data && (data as any).formation) {
+            setFormation((data as any).formation);
+        }
+    };
+
+    const saveFormation = async (newFormation: string) => {
+        setFormation(newFormation);
+        await supabase
+            .from('matches')
+            .update({ formation: newFormation } as any)
+            .eq('id', matchId);
     };
 
     const fetchConfirmedPlayers = async () => {
@@ -275,7 +295,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
     };
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 p-4 lg:h-[calc(100vh-2rem)] lg:overflow-hidden overflow-y-auto">
+        <div className="flex flex-col lg:flex-row gap-6 p-4 lg:h-[calc(100vh-4rem)]">
 
             {/* Columna Izquierda: Campo y Controles */}
             <div className="flex-1 flex flex-col gap-4 min-h-0">
@@ -296,7 +316,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                         <select
                             value={formation}
                             disabled={!isEditable}
-                            onChange={(e) => setFormation(e.target.value)}
+                            onChange={(e) => saveFormation(e.target.value)}
                             className="appearance-none bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white pl-4 pr-10 py-2.5 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-primary transition-all border border-transparent dark:border-gray-700 disabled:opacity-50"
                         >
                             {Object.keys(FORMATIONS).map(f => (
@@ -308,8 +328,8 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                 </div>
 
                 {/* El Campo */}
-                <div className="flex-1 flex justify-center items-center h-full min-h-[400px]">
-                    <div className="relative w-full max-w-[700px] aspect-[4/5] sm:aspect-[4/3] bg-[#2a9d8f] rounded-[2rem] overflow-hidden shadow-2xl border-[6px] border-[#264653]/50">
+                <div className="flex-1 flex justify-center items-center min-h-[350px] sm:min-h-[400px]" style={{ touchAction: 'pan-y' }}>
+                    <div className="relative w-full max-w-[700px] aspect-[3/4] sm:aspect-[4/3] bg-[#2a9d8f] rounded-[2rem] overflow-hidden shadow-2xl border-[6px] border-[#264653]/50" style={{ touchAction: 'none' }}>
                         {/* Marcas del campo */}
                         <div className="absolute inset-6 border-2 border-white/30 rounded-xl pointer-events-none"></div>
                         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/30 -translate-y-1/2 pointer-events-none"></div>
@@ -328,6 +348,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                             return (
                                 <button
                                     key={i}
+                                    data-pitch-slot
                                     onClick={() => handleSlotClick(i)}
                                     style={{
                                         left: `${coords.x}%`,
@@ -398,7 +419,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
 
             {/* Columna Derecha: Plantel Confirmado (Only shown if editable) */}
             {isEditable && (
-                <div className="w-full lg:w-80 flex flex-col bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden min-h-0">
+                <div className="w-full lg:w-80 flex flex-col bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden lg:max-h-[calc(100vh-4rem)]">
                     <div className="p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
                         <div className="flex items-center gap-3">
                             <Users size={20} className="text-primary" />
@@ -409,7 +430,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2 lg:max-h-none">
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ WebkitOverflowScrolling: 'touch' }}>
                         {loading ? (
                             <div className="p-10 text-center">
                                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
