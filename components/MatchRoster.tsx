@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { User, Users, UserX, HelpCircle } from 'lucide-react';
+import { User, Users, UserX, HelpCircle, Share2 } from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
 
 type RosterPlayer = {
     id: string;
@@ -8,9 +9,16 @@ type RosterPlayer = {
     nickname: string | null;
     avatar_url: string | null;
     jersey_number: number | null;
+    role: string | null;
     confirmation_status: string | null;
     stays_for_social: boolean | null;
     note: string | null;
+};
+
+type MatchInfo = {
+    opponent: string;
+    match_date: string;
+    location: string | null;
 };
 
 interface MatchRosterProps {
@@ -18,7 +26,11 @@ interface MatchRosterProps {
 }
 
 export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
+    const { userRole } = useAuth();
+    const isAdminOrDT = userRole === 'admin' || userRole === 'dt';
     const [players, setPlayers] = useState<RosterPlayer[]>([]);
+    const [matchInfo, setMatchInfo] = useState<MatchInfo | null>(null);
+    const [dtName, setDtName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -43,21 +55,40 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
     const fetchRoster = async () => {
         setLoading(true);
 
-        // 1. Get all profiles
+        // 1. Get all profiles (players only)
         const { data: profiles } = await supabase
             .from('profiles')
-            .select('id, full_name, nickname, avatar_url, jersey_number')
+            .select('id, full_name, nickname, avatar_url, jersey_number, role')
             .order('full_name');
 
-        // 2. Get attendance for this match (use select('*') for resilience)
+        // 2. Get attendance for this match
         const { data: attendanceData } = await supabase
             .from('attendance')
             .select('*')
             .eq('match_id', matchId);
 
+        // 3. Get match info
+        const { data: mData } = await supabase
+            .from('matches')
+            .select('opponent, match_date, location')
+            .eq('id', matchId)
+            .single() as any;
+
+        if (mData) setMatchInfo(mData);
+
+        // 4. Get DT
+        const { data: dtData } = await supabase
+            .from('profiles')
+            .select('full_name, nickname')
+            .eq('role', 'dt')
+            .limit(1)
+            .maybeSingle() as any;
+
+        if (dtData) setDtName(dtData.nickname || dtData.full_name?.split(' ')[0] || 'DT');
+
         if (profiles) {
             const attList = (attendanceData || []) as any[];
-            const merged: RosterPlayer[] = (profiles as any[]).map((p: any) => {
+            const merged: RosterPlayer[] = (profiles as any[]).filter((p: any) => p.role !== 'dt').map((p: any) => {
                 const att = attList.find((a: any) => a.player_id === p.id);
                 return {
                     ...p,
@@ -70,6 +101,58 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
         }
 
         setLoading(false);
+    };
+
+    const buildWhatsAppMessage = (): string => {
+        if (!matchInfo) return '';
+
+        const date = new Date(matchInfo.match_date);
+        const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const dayName = dayNames[date.getDay()];
+        const dateStr = `${date.getDate()}/${date.getMonth() + 1}`;
+        const timeStr = `${date.getHours()}${date.getMinutes() > 0 ? ':' + String(date.getMinutes()).padStart(2, '0') : ''} hs`;
+        const locationStr = matchInfo.location ? ` ${matchInfo.location.toUpperCase()}` : '';
+
+        let msg = `*Outlet vs ${matchInfo.opponent}*\n`;
+        msg += `*${dayName} ${dateStr} - ${timeStr}${locationStr}*\n`;
+
+        // Confirmed players
+        confirmed.forEach((p, i) => {
+            const name = p.nickname || p.full_name?.split(' ')[0] || 'Jugador';
+            const noteStr = p.note ? ` (${p.note})` : '';
+            msg += `${i + 1}- ${name}${noteStr}\n`;
+        });
+
+        // DT
+        if (dtName) msg += `DT ${dtName}\n`;
+
+        // Declined
+        if (declined.length > 0) {
+            msg += `\n*Bajas*\n`;
+            declined.forEach((p, i) => {
+                const name = p.nickname || p.full_name?.split(' ')[0] || 'Jugador';
+                const noteStr = p.note ? ` (${p.note})` : '';
+                msg += `${i + 1}- ${name}${noteStr}\n`;
+            });
+        }
+
+        // Social / 3er tiempo
+        const socialPlayers = confirmed.filter(p => p.stays_for_social);
+        if (socialPlayers.length > 0) {
+            msg += `\n*Tercer tiempo*\n`;
+            socialPlayers.forEach((p, i) => {
+                const name = p.nickname || p.full_name?.split(' ')[0] || 'Jugador';
+                msg += `${i + 1}- ${name}\n`;
+            });
+        }
+
+        return msg.trim();
+    };
+
+    const shareViaWhatsApp = () => {
+        const msg = buildWhatsAppMessage();
+        const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
     };
 
     const confirmed = players.filter(p => p.confirmation_status === 'confirmed');
@@ -116,15 +199,28 @@ export const MatchRoster: React.FC<MatchRosterProps> = ({ matchId }) => {
                     </div>
                 </div>
 
-                {/* Tercer Tiempo Badge */}
-                {socialCount > 0 && (
-                    <div className="flex items-center gap-2 bg-[#1B9E5E]/10 text-[#1B9E5E] dark:text-[#22B86A] px-4 py-2.5 rounded-2xl border border-[#1B9E5E]/20 animate-fade-in shrink-0">
-                        <span className="text-lg">🍻</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                            {socialCount} se {socialCount === 1 ? 'queda' : 'quedan'} al 3er tiempo
-                        </span>
-                    </div>
-                )}
+                <div className="flex items-center gap-2 flex-wrap">
+                    {/* Tercer Tiempo Badge */}
+                    {socialCount > 0 && (
+                        <div className="flex items-center gap-2 bg-[#1B9E5E]/10 text-[#1B9E5E] dark:text-[#22B86A] px-4 py-2.5 rounded-2xl border border-[#1B9E5E]/20 animate-fade-in shrink-0">
+                            <span className="text-lg">🍻</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                                {socialCount} se {socialCount === 1 ? 'queda' : 'quedan'} al 3er tiempo
+                            </span>
+                        </div>
+                    )}
+
+                    {/* WhatsApp Share Button */}
+                    {isAdminOrDT && confirmed.length > 0 && (
+                        <button
+                            onClick={shareViaWhatsApp}
+                            className="flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-4 py-2.5 rounded-2xl border border-[#25D366]/20 hover:bg-[#25D366]/20 transition-all active:scale-95 shrink-0"
+                        >
+                            <Share2 size={16} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Enviar por WhatsApp</span>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Empty State */}
