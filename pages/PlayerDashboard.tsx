@@ -228,8 +228,8 @@ const PlayerDashboard: React.FC = () => {
         setStaysForSocial(newVal);
 
         try {
-            const { data, error } = await supabase
-                .from('attendance')
+            const { data, error } = await (supabase
+                .from('attendance') as any)
                 .upsert({
                     match_id: nextMatch.id,
                     player_id: profile.id,
@@ -252,9 +252,9 @@ const PlayerDashboard: React.FC = () => {
     const saveNote = async (text: string) => {
         if (!nextMatch || !profile || !attendance) return;
         try {
-            await supabase
-                .from('attendance')
-                .update({ note: text || null } as any)
+            await (supabase
+                .from('attendance') as any)
+                .update({ note: text || null })
                 .eq('match_id', nextMatch.id)
                 .eq('player_id', profile.id);
         } catch (error) {
@@ -296,9 +296,9 @@ const PlayerDashboard: React.FC = () => {
             const avatarUrl = urlData.publicUrl;
 
             // Update profile
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ avatar_url: avatarUrl } as any)
+            const { error: updateError } = await (supabase
+                .from('profiles') as any)
+                .update({ avatar_url: avatarUrl })
                 .eq('id', profile.id);
 
             if (updateError) throw updateError;
