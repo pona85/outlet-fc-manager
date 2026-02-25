@@ -367,7 +367,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                                             {/* Name label (shown above if in lower field) */}
                                             {coords.y > 70 && (
                                                 <span className="mb-2 text-[10px] sm:text-xs font-black text-white bg-secondary/80 px-3 py-1 rounded-lg backdrop-blur-md whitespace-nowrap max-w-[100px] truncate shadow-lg border border-white/10 uppercase tracking-tighter">
-                                                    {assignedEntry.profile?.full_name?.split(' ')[0]}
+                                                    {assignedEntry.profile?.nickname || assignedEntry.profile?.full_name?.split(' ')[0]}
                                                 </span>
                                             )}
                                             <div className="relative">
@@ -408,7 +408,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                                             {/* Name label (shown below if in upper field) */}
                                             {coords.y <= 70 && (
                                                 <span className="mt-2 text-[10px] sm:text-xs font-black text-white bg-secondary/80 px-3 py-1 rounded-lg backdrop-blur-md whitespace-nowrap max-w-[100px] truncate shadow-lg border border-white/10 uppercase tracking-tighter">
-                                                    {assignedEntry.profile?.full_name?.split(' ')[0]}
+                                                    {assignedEntry.profile?.nickname || assignedEntry.profile?.full_name?.split(' ')[0]}
                                                 </span>
                                             )}
                                         </div>
@@ -478,7 +478,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-sm text-gray-800 dark:text-white truncate uppercase tracking-tighter">
-                                                {player.full_name}
+                                                {player.nickname || player.full_name}
                                             </p>
                                             <p className="text-[10px] font-bold text-gray-500 dark:text-gray-500">
                                                 #{player.jersey_number || '--'} • {player.role?.toUpperCase() || 'JUGADOR'}
@@ -512,7 +512,7 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                                 </button>
                             </div>
                             <p className="text-sm font-bold truncate">
-                                {confirmedPlayers.find(p => p.id === selectedPlayerId)?.full_name}
+                                {(() => { const p = confirmedPlayers.find(p => p.id === selectedPlayerId); return p?.nickname || p?.full_name; })()}
                             </p>
                             <p className="text-[10px] font-medium opacity-70">Haz clic en un espacio o jugador del campo</p>
                         </div>

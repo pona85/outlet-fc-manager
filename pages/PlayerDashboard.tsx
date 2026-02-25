@@ -609,7 +609,7 @@ const PlayerDashboard: React.FC = () => {
                                                 )}
                                                 {!isMe && entryProfile && (
                                                     <span className="mt-1 text-[8px] font-bold text-white/90 whitespace-nowrap truncate max-w-[60px] bg-black/20 px-1.5 py-0.5 rounded-md">
-                                                        {entryProfile.full_name?.split(' ')[0]}
+                                                        {entryProfile.nickname || entryProfile.full_name?.split(' ')[0]}
                                                     </span>
                                                 )}
                                             </div>
@@ -658,7 +658,7 @@ const PlayerDashboard: React.FC = () => {
                                                             )}
                                                         </div>
                                                         <span className={`text-[10px] font-bold truncate ${isMe ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`}>
-                                                            {isMe ? 'Vos' : sub.full_name?.split(' ')[0]}
+                                                            {isMe ? 'Vos' : (sub.nickname || sub.full_name?.split(' ')[0])}
                                                         </span>
                                                     </div>
                                                 );
