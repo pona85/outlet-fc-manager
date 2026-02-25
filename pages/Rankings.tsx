@@ -280,7 +280,7 @@ const Rankings: React.FC = () => {
                                                 <p className={`font-black text-lg ${inf.type === 'positiva' ? 'text-green-500' : 'text-red-500'}`}>
                                                     {inf.points > 0 ? `+${inf.points}` : inf.points}
                                                 </p>
-                                                {userRole === 'dt' && inf.type === 'negativa' && !inf.is_pardoned && (
+                                                {(userRole === 'dt' || userRole === 'admin') && inf.type === 'negativa' && !inf.is_pardoned && (
                                                     <button
                                                         onClick={() => handlePardon(inf)}
                                                         className="text-[9px] font-black text-amber-500 underline uppercase tracking-widest"
