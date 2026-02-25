@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Database } from '../types/supabase';
-import { User, Shield, Users, ChevronDown, X, Trash2 } from 'lucide-react';
+import { User, Shield, Users, ChevronDown, X, Trash2, Share2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type LineupEntry = Database['public']['Tables']['match_lineups']['Row'];
@@ -297,6 +298,52 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
     const getPlayerInSlot = (slotIndex: number) => {
         return lineup.find(l => (l as any).slot_index === slotIndex);
     };
+    const pitchRef = useRef<HTMLDivElement>(null);
+    const [sharing, setSharing] = useState(false);
+
+    const shareFormation = async () => {
+        if (!pitchRef.current) return;
+        setSharing(true);
+        try {
+            const canvas = await html2canvas(pitchRef.current, {
+                backgroundColor: '#2a9d8f',
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            });
+            canvas.toBlob(async (blob) => {
+                if (!blob) return;
+                const file = new File([blob], `formacion-outlet-${formation}.png`, { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            title: `Formación Outlet FC (${formation})`,
+                            files: [file]
+                        });
+                    } catch (err: any) {
+                        if (err.name !== 'AbortError') {
+                            downloadImage(canvas);
+                        }
+                    }
+                } else {
+                    downloadImage(canvas);
+                }
+                setSharing(false);
+            }, 'image/png');
+        } catch (err) {
+            console.error('Error generating image:', err);
+            setSharing(false);
+        }
+    };
+
+    const downloadImage = (canvas: HTMLCanvasElement) => {
+        const link = document.createElement('a');
+        link.download = `formacion-outlet-${formation}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 p-4 lg:h-[calc(100vh-4rem)]">
@@ -329,11 +376,24 @@ export const TacticalLineupManager: React.FC<TacticalLineupManagerProps> = ({ ma
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                     </div>
+
+                    <button
+                        onClick={shareFormation}
+                        disabled={sharing}
+                        className="p-2.5 bg-primary/10 rounded-xl text-primary hover:bg-primary/20 transition-all active:scale-90 disabled:opacity-50"
+                        title="Compartir formación"
+                    >
+                        {sharing ? (
+                            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                            <Share2 size={18} />
+                        )}
+                    </button>
                 </div>
 
                 {/* El Campo */}
                 <div className="flex-1 flex justify-center items-center min-h-[350px] sm:min-h-[400px]" style={{ touchAction: 'pan-y' }}>
-                    <div className="relative w-full max-w-[700px] aspect-[3/4] sm:aspect-[4/3] bg-[#2a9d8f] rounded-[2rem] overflow-hidden shadow-2xl border-[6px] border-[#264653]/50" style={{ touchAction: 'none' }}>
+                    <div ref={pitchRef} className="relative w-full max-w-[700px] aspect-[3/4] sm:aspect-[4/3] bg-[#2a9d8f] rounded-[2rem] overflow-hidden shadow-2xl border-[6px] border-[#264653]/50" style={{ touchAction: 'none' }}>
                         {/* Marcas del campo */}
                         <div className="absolute inset-6 border-2 border-white/30 rounded-xl pointer-events-none"></div>
                         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/30 -translate-y-1/2 pointer-events-none"></div>

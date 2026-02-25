@@ -21,10 +21,12 @@ import {
     Shirt,
     Trophy,
     Users,
-    Camera
+    Camera,
+    Share2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MatchRoster } from '../components/MatchRoster';
+import html2canvas from 'html2canvas';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Match = Database['public']['Tables']['matches']['Row'];
@@ -520,17 +522,61 @@ const PlayerDashboard: React.FC = () => {
                     {/* Formation Snapshot */}
                     {formationData && nextMatch && (
                         <div className="bg-white dark:bg-card-dark rounded-[3rem] p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-3 bg-primary/10 rounded-2xl text-primary">
-                                    <Shield size={24} />
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+                                        <Shield size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-display font-black uppercase tracking-tight">Formación</h3>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{formationData.formation}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-xl font-display font-black uppercase tracking-tight">Formación</h3>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{formationData.formation}</p>
-                                </div>
+                                <button
+                                    onClick={async () => {
+                                        const el = document.getElementById('dashboard-pitch');
+                                        if (!el) return;
+                                        try {
+                                            const canvas = await html2canvas(el, {
+                                                backgroundColor: '#2a9d8f',
+                                                scale: 2,
+                                                useCORS: true,
+                                                allowTaint: true,
+                                                logging: false
+                                            });
+                                            canvas.toBlob(async (blob) => {
+                                                if (!blob) return;
+                                                const file = new File([blob], `formacion-outlet.png`, { type: 'image/png' });
+                                                if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                                                    try {
+                                                        await navigator.share({ title: 'Formación Outlet FC', files: [file] });
+                                                    } catch (err: any) {
+                                                        if (err.name !== 'AbortError') {
+                                                            const link = document.createElement('a');
+                                                            link.download = 'formacion-outlet.png';
+                                                            link.href = canvas.toDataURL('image/png');
+                                                            link.click();
+                                                        }
+                                                    }
+                                                } else {
+                                                    const link = document.createElement('a');
+                                                    link.download = 'formacion-outlet.png';
+                                                    link.href = canvas.toDataURL('image/png');
+                                                    link.click();
+                                                }
+                                            }, 'image/png');
+                                        } catch (err) {
+                                            console.error('Error sharing formation:', err);
+                                        }
+                                    }}
+                                    className="p-2.5 bg-primary/10 rounded-xl text-primary hover:bg-primary/20 transition-all active:scale-90"
+                                    title="Compartir formación"
+                                >
+                                    <Share2 size={18} />
+                                </button>
                             </div>
                             {/* Full-width Pitch */}
-                            <div className="relative w-full aspect-[3/4] bg-gradient-to-b from-[#1e8c7e] to-[#2a9d8f] rounded-2xl border-4 border-secondary/20 overflow-hidden">
+                            <div id="dashboard-pitch" className="relative w-full aspect-[3/4] bg-gradient-to-b from-[#1e8c7e] to-[#2a9d8f] rounded-2xl border-4 border-secondary/20 overflow-hidden">
                                 {/* Field lines */}
                                 <div className="absolute inset-4 border border-white/20 rounded-lg pointer-events-none"></div>
                                 <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20 -translate-y-1/2 pointer-events-none"></div>
