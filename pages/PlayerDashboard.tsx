@@ -22,7 +22,9 @@ import {
     Trophy,
     Users,
     Camera,
-    Share2
+    Share2,
+    Megaphone,
+    Newspaper
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MatchRoster } from '../components/MatchRoster';
@@ -57,6 +59,9 @@ const PlayerDashboard: React.FC = () => {
     const [top3, setTop3] = useState<UnifiedRankingEntry[]>([]);
     const [hasShameAlert, setHasShameAlert] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [news, setNews] = useState<any[]>([]);
+    const [nextMeeting, setNextMeeting] = useState<any | null>(null);
+    const [meetingAttendance, setMeetingAttendance] = useState<any | null>(null);
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
 
@@ -73,11 +78,13 @@ const PlayerDashboard: React.FC = () => {
                 const month = now.getMonth() + 1;
                 const year = now.getFullYear();
 
-                // 1. Fetch Profile and Rankings (Parallel)
-                const [profileRes, rankingsRes, clubPayRes] = await Promise.all([
+                // 1. Fetch Profile, Rankings, News, Meeting
+                const [profileRes, rankingsRes, clubPayRes, newsRes, meetingRes] = await Promise.all([
                     supabase.from('profiles').select('*').eq('id', session.user.id).single(),
                     supabase.from('unified_ranking').select('*').order('total_points', { ascending: false }),
-                    supabase.from('club_payments').select('savings').eq('month', month).eq('year', year).maybeSingle()
+                    supabase.from('club_payments').select('savings').eq('month', month).eq('year', year).maybeSingle(),
+                    (supabase.from('news') as any).select('*, profiles(full_name)').eq('is_active', true).order('created_at', { ascending: false }).limit(3),
+                    (supabase.from('delegate_meetings') as any).select('*').eq('status', 'upcoming').gte('meeting_date', new Date().toISOString()).order('meeting_date', { ascending: true }).limit(1).maybeSingle()
                 ]) as any[];
 
                 if (profileRes.data) {
@@ -86,6 +93,16 @@ const PlayerDashboard: React.FC = () => {
 
                     if (clubPayRes.data) {
                         setSavings(Number(clubPayRes.data.savings));
+                    }
+                    if (newsRes?.data) setNews(newsRes.data);
+                    if (meetingRes?.data) {
+                        setNextMeeting(meetingRes.data);
+                        const attRes = await (supabase.from('delegate_meeting_attendance') as any)
+                            .select('*')
+                            .eq('meeting_id', meetingRes.data.id)
+                            .eq('player_id', session.user.id)
+                            .maybeSingle();
+                        if (attRes?.data) setMeetingAttendance(attRes.data);
                     }
 
                     // 2. Fetch Next Match and its context
@@ -259,6 +276,29 @@ const PlayerDashboard: React.FC = () => {
                 .eq('player_id', profile.id);
         } catch (error) {
             console.error('Error saving note:', error);
+        }
+    };
+
+    const handleMeetingAttendance = async (status: 'confirmed' | 'declined') => {
+        if (!nextMeeting || !profile) return;
+        setIsUpdating(true);
+        try {
+            const upsertData: any = {
+                meeting_id: nextMeeting.id,
+                player_id: profile.id,
+                confirmation_status: status
+            };
+            if (meetingAttendance?.id) upsertData.id = meetingAttendance.id;
+            const { data, error } = await (supabase.from('delegate_meeting_attendance') as any)
+                .upsert(upsertData, { onConflict: 'meeting_id,player_id' })
+                .select()
+                .single();
+            if (!error && data) setMeetingAttendance(data);
+        } catch (error) {
+            console.error('Error updating meeting attendance:', error);
+            alert('Error updating meeting attendance');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -511,6 +551,29 @@ const PlayerDashboard: React.FC = () => {
                         </div>
                     )}
 
+                    {/* Novedades */}
+                    {news.length > 0 && (
+                        <div className="bg-white dark:bg-card-dark rounded-[3rem] p-8 border border-gray-100 dark:border-gray-800 shadow-sm animate-fade-in">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+                                    <Newspaper size={24} />
+                                </div>
+                                <h3 className="text-xl font-display font-black uppercase tracking-tight text-gray-800 dark:text-white">Novedades</h3>
+                            </div>
+                            <div className="space-y-4">
+                                {news.map(n => (
+                                    <div key={n.id} className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-3xl border border-gray-100 dark:border-gray-800 transition-all hover:border-primary/50">
+                                        {n.title && <h4 className="font-bold text-gray-800 dark:text-white mb-1.5">{n.title}</h4>}
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{n.content}</p>
+                                        {n.image_url && (
+                                            <img src={n.image_url} alt="Novedad" className="mt-4 rounded-xl max-h-48 object-cover w-full border border-gray-200 dark:border-gray-700" />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Match Roster - Lista de Convocados */}
                     {nextMatch && (
                         <MatchRoster matchId={nextMatch.id} />
@@ -719,6 +782,57 @@ const PlayerDashboard: React.FC = () => {
 
                 {/* Right Column (Widgets) - Col Span 4 */}
                 <div className="lg:col-span-4 space-y-8">
+
+                    {/* Próxima Reunión (Priority) */}
+                    {nextMeeting && (
+                        <div className="bg-primary/5 rounded-[3rem] p-10 border border-primary/20 shadow-lg animate-fade-in flex flex-col justify-between order-first mb-8 relative overflow-hidden">
+                            {/* Decoration */}
+                            <Megaphone className="absolute -right-6 -bottom-6 w-32 h-32 opacity-[0.05] pointer-events-none text-primary" />
+
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-3 bg-primary/20 rounded-2xl text-primary">
+                                        <Megaphone size={24} />
+                                    </div>
+                                    <h3 className="text-xl font-display font-black uppercase tracking-tight text-gray-900 dark:text-white">Próxima Reunión</h3>
+                                </div>
+
+                                <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 mb-6 shadow-sm relative">
+                                    <p className="text-sm font-bold text-gray-800 dark:text-white uppercase mb-2">
+                                        {new Date(nextMeeting.meeting_date).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })} • {new Date(nextMeeting.meeting_date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    {nextMeeting.description && <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-2">{nextMeeting.description}</p>}
+                                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Premio Asistencia</p>
+                                        <p className="text-sm font-bold text-[#1B9E5E] flex items-center gap-2">
+                                            +4 Pts. Ranking <span className="text-lg">🤝</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-3">
+                                    <button
+                                        onClick={() => handleMeetingAttendance('confirmed')}
+                                        disabled={isUpdating}
+                                        className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${meetingAttendance?.confirmation_status === 'confirmed'
+                                            ? 'bg-primary text-white shadow-[0_0_20px_rgba(45,212,191,0.4)]'
+                                            : 'bg-white dark:bg-gray-800 border-2 border-primary/20 text-primary hover:border-primary/50 hover:bg-primary/5'}`}
+                                    >
+                                        Puedo ir {meetingAttendance?.confirmation_status === 'confirmed' && '✅'}
+                                    </button>
+                                    <button
+                                        onClick={() => handleMeetingAttendance('declined')}
+                                        disabled={isUpdating}
+                                        className={`w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${meetingAttendance?.confirmation_status === 'declined'
+                                            ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                            : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'}`}
+                                    >
+                                        No puedo ir {meetingAttendance?.confirmation_status === 'declined' && '❌'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Treasury Snapshot */}
                     <div className="bg-white dark:bg-card-dark p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-sm group hover:shadow-xl transition-all">

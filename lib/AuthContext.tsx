@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient';
 
 interface AuthContextType {
     session: any;
-    userRole: 'admin' | 'dt' | 'player' | null;
+    userRole: 'admin' | 'dt' | 'player' | 'delegado' | null;
     loading: boolean;
 }
 
@@ -12,10 +12,10 @@ const AuthContext = createContext<AuthContextType>({ session: null, userRole: nu
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [session, setSession] = useState<any>(null);
-    const [userRole, setUserRole] = useState<'admin' | 'dt' | 'player' | null>(null);
+    const [userRole, setUserRole] = useState<'admin' | 'dt' | 'player' | 'delegado' | null>(null);
     const [loading, setLoading] = useState(true);
     // Ref to avoid re-fetching role if we already have it (prevents flicker on token refresh)
-    const roleCache = useRef<Record<string, 'admin' | 'dt' | 'player'>>({});
+    const roleCache = useRef<Record<string, 'admin' | 'dt' | 'player' | 'delegado'>>({});
 
     const fetchRole = async (userId: string): Promise<void> => {
         // If we already have this user's role cached, use it immediately
@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .eq('id', userId)
                 .single() as { data: { role: string } | null, error: any };
             if (data) {
-                const role = data.role as 'admin' | 'dt' | 'player';
+                const role = data.role as 'admin' | 'dt' | 'player' | 'delegado';
                 roleCache.current[userId] = role;
                 setUserRole(role);
             }

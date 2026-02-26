@@ -9,13 +9,15 @@ import {
     Users,
     CalendarDays,
     X,
-    Settings
+    Settings,
+    Megaphone
 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 
 export const BottomNav: React.FC = () => {
     const { userRole } = useAuth();
     const isAdminOrDT = userRole === 'admin' || userRole === 'dt';
+    const hasMoreMenu = userRole === 'admin' || userRole === 'dt' || userRole === 'delegado';
     const [showMore, setShowMore] = useState(false);
     const navigate = useNavigate();
 
@@ -44,24 +46,36 @@ export const BottomNav: React.FC = () => {
                             </button>
                         </div>
                         <div className="px-4 py-4 space-y-2">
-                            <AdminMenuItem
-                                icon={<Users size={22} />}
-                                label="Gestión de Plantel"
-                                desc="Jugadores, roles y estados"
-                                onClick={() => handleAdminNav('/squad')}
-                            />
-                            <AdminMenuItem
-                                icon={<CalendarDays size={22} />}
-                                label="Gestión de Partidos"
-                                desc="Crear, editar y gestionar fechas"
-                                onClick={() => handleAdminNav('/admin')}
-                            />
-                            <AdminMenuItem
-                                icon={<CircleDollarSign size={22} />}
-                                label="Tesorería"
-                                desc="Cuotas, pagos y cierres"
-                                onClick={() => handleAdminNav('/treasury')}
-                            />
+                            {isAdminOrDT && (
+                                <>
+                                    <AdminMenuItem
+                                        icon={<Users size={22} />}
+                                        label="Gestión de Plantel"
+                                        desc="Jugadores, roles y estados"
+                                        onClick={() => handleAdminNav('/squad')}
+                                    />
+                                    <AdminMenuItem
+                                        icon={<CalendarDays size={22} />}
+                                        label="Gestión de Partidos"
+                                        desc="Crear, editar y gestionar fechas"
+                                        onClick={() => handleAdminNav('/admin')}
+                                    />
+                                    <AdminMenuItem
+                                        icon={<CircleDollarSign size={22} />}
+                                        label="Tesorería"
+                                        desc="Cuotas, pagos y cierres"
+                                        onClick={() => handleAdminNav('/treasury')}
+                                    />
+                                </>
+                            )}
+                            {(userRole === 'admin' || userRole === 'dt' || userRole === 'delegado') && (
+                                <AdminMenuItem
+                                    icon={<Megaphone size={22} />}
+                                    label="Gestión Delegados"
+                                    desc="Novedades y reuniones"
+                                    onClick={() => handleAdminNav('/novedades-admin')}
+                                />
+                            )}
                         </div>
                     </div>
                 </>
@@ -94,7 +108,7 @@ export const BottomNav: React.FC = () => {
                         label="Yo"
                     />
 
-                    {isAdminOrDT && (
+                    {hasMoreMenu && (
                         <button
                             onClick={() => setShowMore(true)}
                             className={`flex flex-col items-center justify-center gap-1 transition-all text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300`}

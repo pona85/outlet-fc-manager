@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     Settings,
-    UserCircle
+    UserCircle,
+    Megaphone
 } from 'lucide-react';
 import { Database } from '../types/supabase';
 
@@ -96,6 +97,10 @@ export const Sidebar: React.FC = () => {
                             <NavItem to="/admin" icon={<CalendarDays size={20} />} label="Gestión Partidos" onClick={() => setIsOpen(false)} />
                             <NavItem to="/treasury" icon={<CircleDollarSign size={20} />} label="Tesorería" onClick={() => setIsOpen(false)} />
                         </>
+                    )}
+
+                    {(userRole === 'admin' || userRole === 'dt' || userRole === 'delegado') && (
+                        <NavItem to="/novedades-admin" icon={<Megaphone size={20} />} label="Gestión Delegados" onClick={() => setIsOpen(false)} />
                     )}
 
                     <NavItem to="/rankings" icon={<BarChart3 size={20} />} label="Rankings" onClick={() => setIsOpen(false)} />

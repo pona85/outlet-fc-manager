@@ -11,6 +11,7 @@ import Rankings from './pages/Rankings';
 import SquadManagement from './pages/SquadManagement';
 import Login from './pages/Login';
 import PlayerDashboard from './pages/PlayerDashboard';
+import NewsAdmin from './pages/NewsAdmin';
 import { Moon, Sun, Loader2 } from 'lucide-react';
 import MatchHistory from './pages/MatchHistory';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -50,7 +51,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         return <Navigate to="/login" replace />;
     }
 
-    if (userRole !== 'admin' && userRole !== 'dt') {
+    if (userRole !== 'admin' && userRole !== 'dt' && userRole !== 'delegado') {
         return <Navigate to="/mi-panel" replace />;
     }
 
@@ -65,7 +66,7 @@ const RootRedirect: React.FC = () => {
 
     if (!session) return <Navigate to="/login" replace />;
 
-    if (userRole === 'admin' || userRole === 'dt') {
+    if (userRole === 'admin' || userRole === 'dt' || userRole === 'delegado') {
         return <Navigate to="/panel-control" replace />;
     }
 
@@ -151,6 +152,7 @@ const App: React.FC = () => {
                         <Route path="/rankings" element={<ProtectedRoute><Rankings /></ProtectedRoute>} />
                         <Route path="/squad" element={<AdminRoute><SquadManagement /></AdminRoute>} />
                         <Route path="/history" element={<ProtectedRoute><MatchHistory /></ProtectedRoute>} />
+                        <Route path="/novedades-admin" element={<AdminRoute><NewsAdmin /></AdminRoute>} />
                     </Routes>
                 </Layout>
                 <ThemeToggle />
